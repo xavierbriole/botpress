@@ -296,8 +296,8 @@ export default class HTTPServer {
       this.app.use(
         session({
           secret: process.APP_SECRET,
-          secure: true,
-          httpOnly: true,
+          secure: config.session.secure,
+          httpOnly: config.session.httpOnly,
           domain: config.externalUrl,
           maxAge: ms(config.session.maxAge)
         })

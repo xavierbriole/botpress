@@ -128,6 +128,16 @@ export interface BotpressConfig {
        * @default 1h
        */
       maxAge: string
+      /**
+       * A boolean whether the cookie is only to be sent via HTTPS
+       * @default true
+       */
+      secure: boolean
+      /**
+       * Ensures the cookie is sent only over HTTP(S), not client JavaScript, helping to protect against cross-site scripting attacks.
+       * @default true
+       */
+      httpOnly: boolean
     }
     /**
      * Configure the priority for establishing socket connections for webchat and studio users.

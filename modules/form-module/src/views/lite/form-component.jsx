@@ -10,6 +10,7 @@ export class FormComponent extends React.Component {
       <input placeholder='Job Title' id='jt'>{props.jobTitle} </input>
       <input placeholder='Company' id='co'>{props.company}</input>
       <input placeholder='Use Case' id='uc'>{props.useCase} </input>
+      <button>Submit!</button>
     </form>
   }
 }

@@ -1,17 +1,14 @@
 import { EventEmitter2 } from 'eventemitter2'
-import io from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 import { authEvents, getToken, getUniqueVisitorId, setVisitorId } from '~/util/Auth'
 
 class EventBus extends EventEmitter2 {
-  private adminSocket
-  private guestSocket
-  static default
+  private adminSocket: Socket
+  private guestSocket: Socket
+  static default: EventBus
 
   constructor() {
-    super({
-      wildcard: true,
-      maxListeners: 100
-    })
+    super({ wildcard: true, maxListeners: 100 })
 
     this.onAny(this.dispatchClientEvent)
 
@@ -59,10 +56,17 @@ class EventBus extends EventEmitter2 {
     const socketUrl = window['BP_SOCKET_URL'] || window.location.origin
     const transports = window.SOCKET_TRANSPORTS
 
-    this.adminSocket = io(`${socketUrl}/admin`, { query, transports, path: `${window['ROOT_PATH']}/socket.io` })
+    const params = {
+      query,
+      transports,
+      path: `${window['ROOT_PATH']}/socket.io`,
+      withCredentials: true
+    }
+
+    this.adminSocket = io(`${socketUrl}/admin`, params)
     this.adminSocket.on('event', this.dispatchSocketEvent)
 
-    this.guestSocket = io(`${socketUrl}/guest`, { query, transports, path: `${window['ROOT_PATH']}/socket.io` })
+    this.guestSocket = io(`${socketUrl}/guest`, params)
     this.guestSocket.on('event', this.dispatchSocketEvent)
   }
 }

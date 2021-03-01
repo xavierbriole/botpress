@@ -5,8 +5,8 @@ import { EventEmitter2 } from 'eventemitter2'
 import { Server } from 'http'
 import { inject, injectable, tagged } from 'inversify'
 import _ from 'lodash'
-import socketio, { Adapter } from 'socket.io'
-import redisAdapter from 'socket.io-redis'
+import socketio, { Server as SocketIoServer, Socket } from 'socket.io'
+import { createAdapter, RedisAdapter } from 'socket.io-redis'
 import socketioJwt from 'socketio-jwt'
 
 import { TYPES } from '../../types'
@@ -17,11 +17,7 @@ const debug = DEBUG('realtime')
 export const getSocketTransports = (config: BotpressConfig): string[] => {
   // Just to be sure there is at least one valid transport configured
   const transports = _.filter(config.httpServer.socketTransports, t => ['websocket', 'polling'].includes(t))
-  return transports && transports.length ? transports : ['websocket', 'polling']
-}
-
-interface RedisAdapter extends Adapter {
-  remoteJoin: (socketId: string, roomId: string, callback: (err: any) => void) => void
+  return transports?.length ? transports : ['websocket', 'polling']
 }
 
 @injectable()
@@ -58,12 +54,12 @@ export default class RealtimeService {
   }
 
   async installOnHttpServer(server: Server) {
-    const transports = getSocketTransports(await this.configProvider.getBotpressConfig())
+    const config = await this.configProvider.getBotpressConfig()
 
-    const io: socketio.Server = socketio(server, {
-      transports,
+    const io = new SocketIoServer(server, {
+      transports: getSocketTransports(config) as any, // typing not exported
       path: `${process.ROOT_PATH}/socket.io`,
-      origins: '*:*',
+      cors: config.httpServer.cors,
       serveClient: false
     })
 
@@ -71,7 +67,7 @@ export default class RealtimeService {
       const redisFactory = this.monitoringService.getRedisFactory()
 
       if (redisFactory) {
-        io.adapter(redisAdapter({ pubClient: redisFactory('commands'), subClient: redisFactory('socket') }))
+        io.adapter(createAdapter({ pubClient: redisFactory('commands'), subClient: redisFactory('socket') }))
       }
     }
 
@@ -102,9 +98,10 @@ export default class RealtimeService {
   }
 
   setupAdminSocket(admin: socketio.Namespace): void {
+    // @ts-ignore Typing issue in socketIoJwt
     admin.use(socketioJwt.authorize({ secret: process.APP_SECRET, handshake: true }))
-    admin.on('connection', socket => {
-      const visitorId = _.get(socket, 'handshake.query.visitorId')
+    admin.on('connection', (socket: Socket) => {
+      const visitorId = socket.handshake.query.visitorId
 
       socket.on('event', event => {
         try {
@@ -126,21 +123,22 @@ export default class RealtimeService {
   }
 
   setupGuestSocket(guest: socketio.Namespace): void {
-    guest.on('connection', socket => {
-      const visitorId = _.get(socket, 'handshake.query.visitorId')
+    guest.on('connection', async (socket: Socket) => {
+      const visitorId = socket.handshake.query.visitorId
 
-      if (visitorId && visitorId.length > 0) {
+      if (visitorId?.length > 0) {
         if (this.useRedis) {
-          const adapter = guest.adapter as RedisAdapter
-          adapter.remoteJoin(socket.id, 'visitor:' + visitorId, err => {
-            if (err) {
-              return this.logger
-                .attachError(err)
-                .error(`socket "${socket.id}" for visitor "${visitorId}" can't join the socket.io redis room`)
-            }
-          })
+          const adapter = (guest.adapter as any) as RedisAdapter
+
+          try {
+            await adapter.remoteJoin(socket.id, `visitor:${visitorId}`)
+          } catch (err) {
+            return this.logger
+              .attachError(err)
+              .error(`socket "${socket.id}" for visitor "${visitorId}" can't join the socket.io redis room`)
+          }
         } else {
-          socket.join('visitor:' + visitorId)
+          await socket.join(`visitor:${visitorId}`)
         }
       }
 

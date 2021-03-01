@@ -320,8 +320,8 @@ export default class HTTPServer {
       }
     })
 
-    if (config.cors && config.cors.enabled) {
-      this.app.use(cors(config.cors.origin ? { origin: config.cors.origin } : {}))
+    if (config.cors?.enabled) {
+      this.app.use(cors(config.cors))
     }
 
     this.app.get('/status', async (req, res, next) => {

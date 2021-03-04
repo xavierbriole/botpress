@@ -11,16 +11,15 @@ const schema = {
   useCase : { placeholder:'Use Case', initial: '' }
 }
 
- /*const styles = {
-   textInput: {
-     border: '1px solid #eee',
-     padding: '2px 4px',
-     outline: 'none',
-     boxSizing: 'border-box',
-     borderRadius: '6px',
-     background: '#fff'
-   }
- }*/
+ const styles = {
+  display: 'block', 
+  border: '1px solid #eee',
+  padding: '2px 4px',
+  outline: 'ridge',
+  boxSizing: 'border-box',
+  borderRadius: '5px',
+  background: '#fff'   
+ }
 
 export const FormComponent = (props) => {
   const [state, setState] = useState({})
@@ -46,9 +45,9 @@ export const FormComponent = (props) => {
   return (
     <div>
       {submitted ? <p>Thank you for your submission! </p> : (
-        <form onSubmit={handleSubmit}  >
+        <form onSubmit={handleSubmit} >
         {Object.entries(state).map(([key, value]) => (
-          <input value={value} key={key} placeholder={schema[key].placeholder || ''} onChange={evt => handleChange(key, evt)} />
+          <input style={styles} value={value} key={key} placeholder={schema[key].placeholder || ''} onChange={evt => handleChange(key, evt)} />
         ))}
         <input type="submit" value="Submit"/>
       </form>)

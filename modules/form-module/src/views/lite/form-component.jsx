@@ -16,6 +16,7 @@ const schema = {
      border: '1px solid #eee',
      padding: '2px 4px',
      outline: 'none',
+     boxSizing: 'border-box',
      borderRadius: '6px',
      background: '#fff'
    }
@@ -23,7 +24,7 @@ const schema = {
 
 export const FormComponent = (props) => {
   const [state, setState] = useState({})
-  const [submittted, setSubmitted] = useState(false)
+  const [submitted, setSubmit] = useState(false)
 
   useEffect(() => {
     const formFields = _.pick(props, Object.keys(schema))
@@ -38,20 +39,20 @@ export const FormComponent = (props) => {
     evt.preventDefault()
     props.onSendData({ type: 'form-data', data: state })
     props.onSendData({ type: 'text', text: 'Looks good!' })
-    setSubmitted(true)
-  }, [props, state])
+    setSubmit(true)
+  }, [props, state, setSubmit])
 
+  
   return (
     <div>
-      {!submittted && (
-        <form onSubmit={handleSubmit}>
+      {submitted ? <p>Thank you for your submission! </p> : (
+        <form onSubmit={handleSubmit}  >
         {Object.entries(state).map(([key, value]) => (
           <input value={value} key={key} placeholder={schema[key].placeholder || ''} onChange={evt => handleChange(key, evt)} />
         ))}
         <input type="submit" value="Submit"/>
-      </form>
-      )}
-    {submittted && (<div><h1>Submitted!</h1></div>)}
+      </form>)
+      }
   </div>
   );}
 

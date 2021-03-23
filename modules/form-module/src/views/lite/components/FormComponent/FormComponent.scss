@@ -1,6 +1,17 @@
 .Form {
   font-family: Roboto;
   width: 225px;
+
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0px;
+  left: 0px;
+  padding: 8px;
+  background-color: white;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .Group {
@@ -36,6 +47,8 @@
   font-weight: bold;
   transition: all 0.3s ease-in-out;
   margin-top: 8px;
+  cursor: pointer;
+  margin-top: auto;
 }
 
 .Error {
@@ -43,4 +56,5 @@
   text-align: right;
   color: #d41313;
   width: 100%;
+  transition: all 0.3s ease-in-out;
 }

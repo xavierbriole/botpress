@@ -27,7 +27,7 @@ const myAction = async (firstName, lastName, phoneNumber, companyName, businessE
     }
   ]
 
-  bp.events.replyToEvent(event, payload)
+  bp.events.replyToEvent(event, payload, event.id)
 }
 
 return myAction(

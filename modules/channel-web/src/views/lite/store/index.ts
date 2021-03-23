@@ -269,11 +269,16 @@ class RootStore {
       return
     }
 
-    await this.sendData({ type: 'text', text: userMessage })
-    trackMessage('sent')
-
-    this.composer.addMessageToHistory(userMessage)
     this.composer.updateMessage('')
+    try {
+      await this.sendData({ type: 'text', text: userMessage })
+      trackMessage('sent')
+
+      this.composer.addMessageToHistory(userMessage)
+    } catch (e) {
+      this.composer.updateMessage(userMessage)
+      throw e
+    }
   }
 
   /** Sends an event to start conversation & hide the bot info page */
@@ -304,6 +309,8 @@ class RootStore {
 
   @action.bound
   async resetSession(): Promise<void> {
+    this.composer.setLocked(false)
+
     return this.api.resetSession(this.currentConversationId)
   }
 

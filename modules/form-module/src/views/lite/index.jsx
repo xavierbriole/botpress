@@ -1,3 +1,1 @@
-export { FormComponent } from './form-component'
-
-
+export { FormComponent } from './components/FormComponent/FormComponent'

@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+
+/* @font-face {
+  font-family: Roobert;
+  src: url('https://d33wubrfki0l68.cloudfront.net/32c0a91a5aa1226eeaf8e1b5758ecf24c47f22af/f5a67/static/roobert-regular-ad6f5d3942d275beaf27417f710394f6.eot');
+} */
+
+body {
+  font-family: Open Sans;
+}
+
+strong {
+  font-weight: 600;
+}
+
+.bpw-widget-btn {
+  background-color: #3276ea;
+}
+
+.bpw-widget-btn:focus,
+.bpw-widget-btn:hover {
+  background-color: #cad7f5;
+  color: #3276ea;
+}
+
+.bpw-floating-button {
+  border-radius: 5px;
+}
+
+.bpw-floating-button:hover i svg path {
+  fill: #3276ea !important;
+}
+
+.bpw-button {
+  background-color: #3276ea;
+  color: white;
+  min-width: 100%;
+  border-radius: 5px;
+  font-weight: bold;
+  /* font-weight: 600; */
+}
+
+.bpw-button:hover {
+  background-color: #cad7f5;
+  color: #3276ea;
+  border: 1px solid #cad7f5;
+}
+
+.bpw-chat-bubble-content {
+  border-radius: 5px;
+}
+
+.bpw-bot-avatar img,
+.bpw-bot-avatar svg {
+  background: transparent;
+  border-radius: 0px;
+}
+
+/* layout */
+.bpw-header-container {
+  border-top: 0px;
+  border-left: 0px;
+}
+
+.bpw-layout {
+  right: 32px;
+  bottom: 40px;
+  height: 80%;
+  border-radius: 15px;
+  box-shadow: -2px 0px 6px 0px #00000015;
+}
+
+/* .bpw-msg-list
+.bpw-msg-list-container */
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #d2d2d2;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #9b9b9b;
+}
+
+/* inject.css */
+/* .bpw-widget-side {
+  top: auto;
+  bottom: 48px;
+  height: 80vh;
+} */
+
+/*
+TODO: Add media queries to style for phones, and check styling in browser stack
+*/

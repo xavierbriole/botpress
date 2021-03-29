@@ -1,12 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
 
-/* @font-face {
+@font-face {
   font-family: Roobert;
-  src: url('https://d33wubrfki0l68.cloudfront.net/32c0a91a5aa1226eeaf8e1b5758ecf24c47f22af/f5a67/static/roobert-regular-ad6f5d3942d275beaf27417f710394f6.eot');
-} */
+  src: url('Roobert-Regular.otf');
+}
+
+@font-face {
+  font-family: Roobert;
+  src: url('Roobert-SemiBold.otf');
+  font-weight: bold;
+}
 
 body {
-  font-family: Open Sans;
+  font-family: Roobert, sans-serif;
 }
 
 strong {
@@ -36,8 +42,8 @@ strong {
   color: white;
   min-width: 100%;
   border-radius: 5px;
-  font-weight: bold;
-  /* font-weight: 600; */
+  font-weight: 600;
+  font-family: Roobert, sans-serif;
 }
 
 .bpw-button:hover {
@@ -70,6 +76,9 @@ strong {
   box-shadow: -2px 0px 6px 0px #00000015;
 }
 
+.bpw-send-button {
+  font-family: Roobert, sans-serif;
+}
 /* .bpw-msg-list
 .bpw-msg-list-container */
 

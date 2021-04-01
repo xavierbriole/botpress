@@ -58,9 +58,8 @@ class TrainingTransactionContext {
     return this.table.where(query).select('*')
   }
 
-  public delete = async (trainId: TrainingId): Promise<void> => {
-    const { botId, language } = trainId
-    return this.table.where({ botId, language }).delete()
+  public delete = async (query: Partial<TrainingSession>): Promise<void> => {
+    return this.table.where(query).delete()
   }
 
   public clear = async (): Promise<void[]> => {
@@ -124,6 +123,10 @@ export class TrainingRepository implements TrainingRepository {
 
   public query = async (query: Partial<TrainingSession>): Promise<TrainingSession[]> => {
     return this._context.query(query)
+  }
+
+  public delete = async (query: Partial<TrainingSession>): Promise<void> => {
+    return this._context.delete(query)
   }
 
   public clear = async (): Promise<void[]> => {

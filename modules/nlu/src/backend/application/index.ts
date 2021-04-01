@@ -93,7 +93,8 @@ export class NLUApplication {
       throw new BotNotMountedError(botId)
     }
     await bot.unmount()
-    await this._trainingQueue.cancelTrainings(botId) // TODO: fully remove training sessions
+    await this._trainingQueue.cancelTrainings(botId)
+    await this._trainingQueue.repository.delete({ botId })
     this._botService.removeBot(botId)
   }
 

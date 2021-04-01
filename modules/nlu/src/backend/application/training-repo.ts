@@ -54,7 +54,7 @@ class TrainingTransactionContext {
   }
 
   public clearZombies = async (maxLifetime: number = MAX_TRAINING_UPDATE_TIMEOUT) => {
-    const thresholdTime = new Date().getTime() + maxLifetime
+    const thresholdTime = new Date().getTime() - maxLifetime
 
     return this.table
       .where('status', 'in', STATES_REQUIRING_NODE_AFFINITY as string[])

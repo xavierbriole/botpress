@@ -2,6 +2,7 @@ import { TrainingState, TrainingId, TrainingSession } from '../../typings'
 import { ITrainingRepository, ITrainingTransactionContext } from '../../training-repo'
 import { Semaphore } from './utils.u.test'
 class FakeTransactionContext implements ITrainingTransactionContext {
+  public clearZombies: (maxLifetime?: number) => Promise<number>
   public transaction = null
   private _trainings: { [key: string]: TrainingState & { modifiedOn: Date } } = {}
 
@@ -41,11 +42,26 @@ class FakeTransactionContext implements ITrainingTransactionContext {
       .filter(this._matchQuery(query))
   }
 
-  public async delete(id: TrainingId) {
-    delete this._trainings[this._toKey(id)]
+  public async delete(trainId: Partial<TrainingId>) {
+    if (trainId.botId && trainId.language) {
+      delete this._trainings[this._toKey(trainId as TrainingId)]
+      return
+    }
+
+    if (!trainId.botId || !trainId.language) {
+      return
+    }
+
+    const keyToFilter = Object.keys(trainId).filter(k => trainId[k])[0]
+
+    const idsToDelete = Object.entries(this._trainings)
+      .filter(([_, training]) => trainId[keyToFilter] === training[keyToFilter])
+      .map(([id, _]) => id)
+
+    idsToDelete.forEach(id => delete this._trainings[id])
   }
 
-  public async clear() {
+  public async clear(): Promise<void[]> {
     const keys = Object.keys(this._trainings)
     return Promise.map(keys, async k => {
       delete this._trainings[k]
@@ -95,7 +111,15 @@ export class FakeTrainingRepository implements ITrainingRepository {
     return this._context.query(query)
   }
 
-  public clear = async (): Promise<void[]> => {
+  public clearZombies = async (): Promise<number> => {
+    return 0
+  }
+
+  public delete = async (trainId: Partial<TrainingId>): Promise<void> => {
+    return this._context.delete(trainId)
+  }
+
+  public clear = (): Promise<void[]> => {
     return this._context.clear()
   }
 

@@ -7,7 +7,7 @@ import { IBotService } from './bot-service'
 import { BotNotMountedError } from './errors'
 import { ITrainingQueue } from './training-queue'
 import { ITrainingRepository } from './training-repo'
-import { Predictor, BotConfig, TrainingSession, TrainingState, TrainingId } from './typings'
+import { Predictor, BotConfig, TrainingState, TrainingId } from './typings'
 
 export class NLUApplication {
   private _queueTrainingOnBotMount: boolean
@@ -93,6 +93,7 @@ export class NLUApplication {
       throw new BotNotMountedError(botId)
     }
     await bot.unmount()
+
     await this._trainingQueue.cancelTrainings(botId)
     await this._trainingQueue.repository.delete({ botId })
     this._botService.removeBot(botId)

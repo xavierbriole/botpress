@@ -10,6 +10,7 @@ import { IModelRepository } from '../scoped/infrastructure/model-repository'
 import { mock, Mock } from './utils/mock-extra.u.test'
 import './utils/sdk.u.test'
 import { ITrainingQueue } from '../training-queue'
+import { ITrainingRepository } from '../training-repo'
 
 const botId = 'myBot'
 const makeModelId = (languageCode: string): NLUEngine.ModelId => ({
@@ -47,8 +48,12 @@ describe('NLU API unit tests', () => {
     trainingQueue = mock<ITrainingQueue>({
       initialize: jest.fn(),
       teardown: jest.fn(),
+      clearZombieTrainings: jest.fn(),
       queueTraining: jest.fn(),
-      cancelTrainings: jest.fn()
+      cancelTrainings: jest.fn(),
+      repository: mock<ITrainingRepository>({
+        delete: jest.fn()
+      })
     })
     engine = mock<NLUEngine.Engine>({})
     servicesFactory = mock<IScopedServicesFactory>({})
@@ -187,6 +192,7 @@ describe('NLU API unit tests', () => {
 
     // assert
     expect(trainingQueue.teardown).toHaveBeenCalled()
+    expect(trainingQueue.repository.delete).toHaveBeenCalled()
     expect(bot1.unmount).toHaveBeenCalled()
     expect(bot2.unmount).toHaveBeenCalled()
   })

@@ -3,6 +3,9 @@ import { Transaction } from 'knex'
 import ms from 'ms'
 import { TrainingId, TrainingState, TrainingSession, I } from './typings'
 
+export const MAX_TRAINING_UPDATE_TIMEOUT = ms('5m')
+export const STATES_REQUIRING_NODE_AFFINITY: sdk.NLU.TrainingStatus[] = ['training', 'canceled', 'errored']
+
 const TABLE_NAME = 'nlu_training_queue'
 const TRANSACTION_TIMEOUT_MS = ms('5s')
 const debug = DEBUG('nlu').sub('database')
@@ -50,6 +53,15 @@ class TrainingTransactionContext {
       .first()
   }
 
+  public clearZombies = async (maxLifetime: number = MAX_TRAINING_UPDATE_TIMEOUT) => {
+    const thresholdTime = new Date().getTime() + maxLifetime
+
+    return this.table
+      .where('status', 'in', STATES_REQUIRING_NODE_AFFINITY as string[])
+      .andWhere('modifiedOn', '<', new Date(thresholdTime).toString())
+      .delete()
+  }
+
   public getAll = async (): Promise<TrainingSession[]> => {
     return this.table.select('*')
   }
@@ -58,8 +70,8 @@ class TrainingTransactionContext {
     return this.table.where(query).select('*')
   }
 
-  public delete = async (query: Partial<TrainingSession>): Promise<void> => {
-    return this.table.where(query).delete()
+  public delete = async (trainId: Partial<TrainingId>): Promise<void> => {
+    return this.table.where(trainId).delete()
   }
 
   public clear = async (): Promise<void[]> => {
@@ -125,8 +137,12 @@ export class TrainingRepository implements TrainingRepository {
     return this._context.query(query)
   }
 
-  public delete = async (query: Partial<TrainingSession>): Promise<void> => {
-    return this._context.delete(query)
+  public clearZombies = async (): Promise<number> => {
+    return this._context.clearZombies()
+  }
+
+  public delete = async (trainId: Partial<TrainingId>): Promise<void> => {
+    return this._context.delete(trainId)
   }
 
   public clear = async (): Promise<void[]> => {

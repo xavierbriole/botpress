@@ -3,9 +3,13 @@ import * as NLU from 'common/nlu/engine'
 import _ from 'lodash'
 
 import moment from 'moment'
-import ms from 'ms'
 import nanoid from 'nanoid'
-import { ITrainingRepository, ITrainingTransactionContext } from './training-repo'
+import {
+  ITrainingRepository,
+  ITrainingTransactionContext,
+  MAX_TRAINING_UPDATE_TIMEOUT,
+  STATES_REQUIRING_NODE_AFFINITY
+} from './training-repo'
 import { TrainingId, TrainerService, TrainingListener, TrainingState, TrainingSession, I } from './typings'
 
 export interface TrainingQueueOptions {
@@ -21,9 +25,6 @@ const DEFAULT_STATE = { status: <sdk.NLU.TrainingStatus>'idle', progress: 0 }
 export type ITrainingQueue = I<TrainingQueue>
 
 const debug = DEBUG('nlu').sub('lifecycle')
-const MAX_TRAINING_UPDATE_TIMEOUT = ms('5m')
-
-const STATES_REQUIRING_NODE_AFFINITY: sdk.NLU.TrainingStatus[] = ['training', 'canceled', 'errored']
 
 export class TrainingQueue {
   private _options: TrainingQueueOptions
@@ -48,6 +49,11 @@ export class TrainingQueue {
 
   public get repository() {
     return this._trainingRepo
+  }
+
+  public async clearZombieTrainings(): Promise<void> {
+    const nZombies = await this._trainingRepo.clearZombies()
+    debug(`Cleared ${nZombies} zombie trainings`)
   }
 
   public async needsTraining(trainId: TrainingId): Promise<void> {

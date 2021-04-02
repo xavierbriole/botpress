@@ -24,7 +24,7 @@ interface FlowNodeView {
 
 const addTriggersToListenNodes = (flow: sdk.Flow, flowPath: string) => {
   for (const node of flow.nodes) {
-    if (node.onReceive != undefined) {
+    if (node.onReceive != null) {
       const listenNode = (node as unknown) as sdk.ListenNode
       if (!listenNode.triggers?.length) {
         debug('Add triggers property to node %o', { flow: flowPath, node: node.name })
@@ -41,7 +41,6 @@ const addSuccessFailureNodes = (flow: sdk.Flow, flowPath: string, flowUi: FlowNo
       id,
       name: type,
       onEnter: [],
-      // tslint:disable-next-line: no-null-keyword
       onReceive: null,
       next: [],
       type
@@ -138,7 +137,7 @@ const createTopicsFromContexts = async (bp: typeof sdk, ghost: sdk.ScopedGhostSe
 
     for (const topic of contexts) {
       if (!existingTopics?.find(x => x.name === topic)) {
-        await axios.post('/topic', { name: topic, description: '' }, axiosConfig)
+        await axios.post('/topics', { name: topic, description: '' }, axiosConfig)
         debug(`Created a new topic for existing NLU context ${topic}`)
       }
     }

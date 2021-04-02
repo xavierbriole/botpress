@@ -1,22 +1,23 @@
-import { Icon, Tab, Tabs, Tag } from '@blueprintjs/core'
+import { Icon } from '@blueprintjs/core'
 import { AxiosInstance } from 'axios'
-import { lang } from 'botpress/shared'
-import { Container, SidePanel, SplashScreen } from 'botpress/ui'
+import { NLU } from 'botpress/sdk'
+import { EmptyState, lang } from 'botpress/shared'
+import { Container } from 'botpress/ui'
 import _ from 'lodash'
 import React, { FC, useEffect, useState } from 'react'
 
 import { makeApi } from '../../api'
 
 import { EntityEditor } from './entities/EntityEditor'
-import { EntitySidePanelSection } from './entities/SidePanelSection'
 import { IntentEditor } from './intents/FullEditor'
 import { LiteEditor } from './intents/LiteEditor'
-import { IntentSidePanelSection } from './intents/SidePanelSection'
+import { NLUSidePanel } from './SidePanel'
 import style from './style.scss'
 
+type NLUItemType = 'intent' | 'entity'
 export interface NluItem {
   name: string
-  type: 'intent' | 'entity'
+  type: NLUItemType
 }
 
 interface Props {
@@ -81,7 +82,7 @@ const NLU: FC<Props> = props => {
   }
 
   const updateEntity = (targetEntity: string, entity) => {
-    // tslint:disable-next-line: no-floating-promises
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     api.updateEntity(targetEntity, entity)
     const i = entities.findIndex(ent => ent.name === entity.name)
     setEntities([...entities.slice(0, i), entity, ...entities.slice(i + 1)])
@@ -96,63 +97,29 @@ const NLU: FC<Props> = props => {
     )
   }
 
-  const intentsPanel = (
-    <IntentSidePanelSection
-      api={api}
-      contentLang={props.contentLang}
-      intents={intents}
-      currentItem={currentItem}
-      setCurrentItem={handleSelectItem}
-      reloadIntents={loadIntents}
-    />
-  )
-
   const customEntities = entities.filter(e => e.type !== 'system')
-  const entitiesPanel = (
-    <EntitySidePanelSection
-      api={api}
-      entities={customEntities}
-      currentItem={currentItem}
-      setCurrentItem={handleSelectItem}
-      reloadEntities={loadEntities}
-      reloadIntents={loadIntents}
-    />
-  )
 
   return (
     <Container>
-      <SidePanel>
-        <Tabs id="nlu-tabs" className={style.headerTabs} defaultSelectedTabId="intents" large={false}>
-          <Tab id="intents" panel={intentsPanel}>
-            <span>{lang.tr('module.nlu.intents.title')}&nbsp;</span>
-            <Tag large={false} round={true} minimal={true}>
-              {intents.length}
-            </Tag>
-          </Tab>
-          <Tab id="entities" panel={entitiesPanel}>
-            <span>{lang.tr('module.nlu.entities.title')}</span>{' '}
-            <Tag large={false} round={true} minimal={true}>
-              {customEntities.length}
-            </Tag>
-          </Tab>
-        </Tabs>
-      </SidePanel>
+      <NLUSidePanel
+        api={api}
+        contentLang={props.contentLang}
+        currentItem={currentItem}
+        entities={customEntities}
+        intents={intents}
+        reloadEntities={loadEntities}
+        reloadIntents={loadIntents}
+        setCurrentItem={setCurrentItem}
+      />
       <div className={style.container}>
         {!currentItemExists() && (
-          <SplashScreen
-            icon={<Icon iconSize={80} icon="translate" style={{ marginBottom: '3em' }} />}
-            title={lang.tr('module.nlu.title')}
-            description={lang.tr('module.nlu.description')}
+          <EmptyState
+            icon={<Icon icon="translate" iconSize={70} className={style.emtpyStateIcon} />}
+            text={lang.tr('module.nlu.description')}
           />
         )}
         {!!intents.length && currentItem && currentItem.type === 'intent' && (
-          <IntentEditor
-            intent={currentItem.name}
-            api={api}
-            contentLang={props.contentLang}
-            showSlotPanel
-            axios={props.bp.axios} // to be removed for api, requires a lot of refactoring
-          />
+          <IntentEditor intent={currentItem.name} api={api} contentLang={props.contentLang} showSlotPanel />
         )}
         {currentItem && currentItem.type === 'entity' && (
           <EntityEditor

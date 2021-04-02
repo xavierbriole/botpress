@@ -12,8 +12,8 @@ import { sanitizeName } from '~/util'
 
 import { buildFlowName } from '..//WorkflowEditor/utils'
 
-import style from './style.scss'
 import EmptyStateIcon from './EmptyStateIcon'
+import style from './style.scss'
 import TreeItem from './TreeItem'
 
 const lockedFlows = ['misunderstood.flow.json', 'error.flow.json', 'workflow_ended.flow.json']
@@ -291,7 +291,7 @@ const TopicList: FC<Props> = props => {
 
     if (isTopic) {
       if (value !== item.id && !props.topics.find(x => x.name === value)) {
-        await axios.post(`${window.BOT_API_PATH}/topic/${item.id}`, { name: value, description: undefined })
+        await axios.post(`${window.BOT_API_PATH}/topics/${item.id}`, { name: value, description: undefined })
 
         if (expanded[item.id]) {
           setExpanded({ ...expanded, [item.id]: false, [value]: true })

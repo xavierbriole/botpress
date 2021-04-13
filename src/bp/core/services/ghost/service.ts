@@ -120,7 +120,9 @@ export class GhostService {
     const dbRevs = await this.dbDriver.listRevisions('data/')
     await Promise.each(dbRevs, rev => this.dbDriver.deleteRevision(rev.path, rev.revision))
 
+    this.logger.info(`[forceUpdate] Listing file changes`)
     const allChanges = await this.listFileChanges(tmpFolder)
+    this.logger.info(`[forceUpdate] Iterating on changes (count: ${allChanges.length})`)
     for (const { changes, localFiles } of allChanges) {
       await Promise.map(
         changes.filter(x => x.action === 'del'),

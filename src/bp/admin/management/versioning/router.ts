@@ -13,6 +13,10 @@ class VersioningRouter extends CustomAdminRouter {
     this.setupRoutes()
   }
 
+  log(msg: string) {
+    this.logger.info(`[VersioningRouter] ${msg}`)
+  }
+
   setupRoutes() {
     this.router.get(
       '/export',
@@ -49,25 +53,32 @@ class VersioningRouter extends CustomAdminRouter {
     this.router.post(
       '/update',
       this.asyncMiddleware(async (req, res) => {
+        this.log(`Received update request request`)
         const tmpDir = tmp.dirSync({ unsafeCleanup: true })
         const beforeBotIds = await this.botService.getBotsIds()
 
         try {
+          this.log(`Extracting archive from request`)
           await this.extractArchiveFromRequest(req, tmpDir.name)
+
+          this.log(`Force updating BPFS`)
           const newBotIds = await this.bpfs.forceUpdate(tmpDir.name)
 
-          this.logger.info(`Unmounting bots: ${beforeBotIds.join(', ')}`)
-          this.logger.info(`Mounting bots: ${newBotIds.join(', ')}`)
-
           // Unmount all previous bots and re-mount only the remaining (and new) bots
+          this.log(`Unmounting bots: ${beforeBotIds.join(', ')}`)
           await Promise.map(beforeBotIds, id => this.botService.unmountBot(id))
+
+          this.log(`Mounting bots: ${newBotIds.join(', ')}`)
           await Promise.map(newBotIds, id => this.botService.mountBot(id))
 
+          this.log(`Sending back response`)
           res.sendStatus(200)
         } catch (error) {
           throw new UnexpectedError('Error while pushing changes', error)
         } finally {
+          this.log(`Removing temp dir`)
           tmpDir.removeCallback()
+          this.log(`Removed temp dir`)
         }
       })
     )
@@ -85,6 +96,7 @@ class VersioningRouter extends CustomAdminRouter {
     request.on('data', chunk => buffer.push(chunk))
 
     await Promise.fromCallback(cb => request.on('end', cb))
+    this.log('Extracting archive ...')
     await extractArchive(Buffer.concat(buffer), dataFolder)
   }
 }

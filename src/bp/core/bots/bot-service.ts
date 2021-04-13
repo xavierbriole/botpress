@@ -606,10 +606,13 @@ export class BotService {
         throw new Error('Supported languages must include the default language of the bot')
       }
 
+      this.logger.info(`[_localMount] loadElementsForBot (${botId})`)
       await this.cms.loadElementsForBot(botId)
+      this.logger.info(`[_localMount] loadModulesForBot (${botId})`)
       await this.moduleLoader.loadModulesForBot(botId)
 
       const api = await createForGlobalHooks()
+      this.logger.info(`[_localMount] executing afterBotMount hook (${botId})`)
       await this.hookService.executeHook(new Hooks.AfterBotMount(api, botId))
       BotService._mountedBots.set(botId, true)
       this._invalidateBotIds()

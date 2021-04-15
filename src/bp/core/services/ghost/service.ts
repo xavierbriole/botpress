@@ -120,7 +120,7 @@ export class GhostService {
     const dbRevs = await this.dbDriver.listRevisions('data/')
     await Promise.each(dbRevs, rev => this.dbDriver.deleteRevision(rev.path, rev.revision))
 
-    this.logger.info(`[forceUpdate] Listing file changes`)
+    this.logger.info('[forceUpdate] Listing file changes')
     const allChanges = await this.listFileChanges(tmpFolder)
     this.logger.info(`[forceUpdate] Iterating on changes (count: ${allChanges.length})`)
     for (const { changes, localFiles } of allChanges) {
@@ -145,8 +145,14 @@ export class GhostService {
     return allChanges.filter(x => x.localFiles.length && x.botId).map(x => x.botId)
   }
 
+  logFileChanges(string) {
+    this.logger.info('[listFileChanges] ' + string)
+  }
+
   // TODO: refactor this
   async listFileChanges(tmpFolder: string): Promise<BpfsScopedChange[]> {
+    this.logFileChanges('tmpFolder: ' + tmpFolder)
+    this.logger.error('Testing Error logging')
     const tmpDiskGlobal = this.custom(path.resolve(tmpFolder, 'data/global'))
     const tmpDiskBot = (botId?: string) => this.custom(path.resolve(tmpFolder, 'data/bots', botId || ''))
 
@@ -177,6 +183,7 @@ export class GhostService {
           )
         }
       } catch (err) {
+        this.logFileChanges('Error getting diff: ' + err.message)
         // Todo better handling
         this.logger.attachError(err).error(`Error while checking diff for "${file}"`)
         return { path: file, action: 'edit' as FileChangeAction }
@@ -194,6 +201,7 @@ export class GhostService {
           sizeDiff: Math.abs(dbFileSize - localFileSize)
         }
       } catch (err) {
+        this.logFileChanges('Error in fileSizeDiff ' + err.message)
         this.logger.attachError(err).error(`Error while checking file size for "${file}"`)
         return { path: file, action: 'edit' as FileChangeAction }
       }
@@ -213,16 +221,23 @@ export class GhostService {
       localGhost: ScopedGhostService,
       remoteGhost: ScopedGhostService
     ) => {
+      this.logFileChanges('Started getFileChanges')
       const localRevs = filterRevisions(await localGhost.listDiskRevisions())
       const remoteRevs = filterRevisions(await remoteGhost.listDbRevisions())
       const syncedRevs = _.intersectionBy(localRevs, remoteRevs, uniqueFile)
+
+      this.logFileChanges('Calculed Revs')
       const unsyncedFiles = _.uniq(_.differenceBy(remoteRevs, syncedRevs, uniqueFile).map(x => x.path))
 
       const localFiles: string[] = await getDirectoryFullPaths(botId, localGhost)
       const remoteFiles: string[] = await getDirectoryFullPaths(botId, remoteGhost)
 
+      this.logFileChanges('Got files')
+
       const deleted = _.difference(remoteFiles, localFiles).map(x => ({ path: x, action: 'del' as FileChangeAction }))
       const added = _.difference(localFiles, remoteFiles).map(x => ({ path: x, action: 'add' as FileChangeAction }))
+
+      this.logFileChanges('Got added and deleted')
 
       const filterDeleted = file => !_.map([...deleted, ...added], 'path').includes(file)
       const filterDiffable = file => DIFFABLE_EXTS.includes(path.extname(file))
@@ -230,6 +245,8 @@ export class GhostService {
       const editedFiles = unsyncedFiles.filter(filterDeleted)
       const checkFileDiff = editedFiles.filter(filterDiffable)
       const checkFileSize = unsyncedFiles.filter(x => !checkFileDiff.includes(x))
+
+      this.logFileChanges('Got all filters')
 
       const edited = [
         ...(await Promise.map(checkFileDiff, getFileDiff)).filter(x => x.add !== 0 || x.del !== 0),

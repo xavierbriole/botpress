@@ -53,15 +53,15 @@ class VersioningRouter extends CustomAdminRouter {
     this.router.post(
       '/update',
       this.asyncMiddleware(async (req, res) => {
-        this.log(`Received update request request`)
+        this.log('Received update request request')
         const tmpDir = tmp.dirSync({ unsafeCleanup: true })
         const beforeBotIds = await this.botService.getBotsIds()
 
         try {
-          this.log(`Extracting archive from request`)
+          this.log('Extracting archive from request')
           await this.extractArchiveFromRequest(req, tmpDir.name)
 
-          this.log(`Force updating BPFS`)
+          this.log('Force updating BPFS')
           const newBotIds = await this.bpfs.forceUpdate(tmpDir.name)
 
           // Unmount all previous bots and re-mount only the remaining (and new) bots
@@ -71,14 +71,14 @@ class VersioningRouter extends CustomAdminRouter {
           this.log(`Mounting bots: ${newBotIds.join(', ')}`)
           await Promise.map(newBotIds, id => this.botService.mountBot(id))
 
-          this.log(`Sending back response`)
+          this.log('Sending back response')
           res.sendStatus(200)
         } catch (error) {
           throw new UnexpectedError('Error while pushing changes', error)
         } finally {
-          this.log(`Removing temp dir`)
+          this.log('Removing temp dir')
           tmpDir.removeCallback()
-          this.log(`Removed temp dir`)
+          this.log('Removed temp dir')
         }
       })
     )

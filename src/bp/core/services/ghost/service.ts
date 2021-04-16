@@ -127,17 +127,27 @@ export class GhostService {
       await Promise.map(
         changes.filter(x => x.action === 'del'),
         async file => {
-          await this.dbDriver.deleteFile(file.path)
-          await invalidateFile(file.path)
+          try {
+            await this.dbDriver.deleteFile(file.path)
+            await invalidateFile(file.path)
+          } catch (err) {
+            this.logger.error(`Error deleting file ${file.path}: ${err.message}`)
+            throw err
+          }
         }
       )
 
       // Upload all local files for that scope
       if (localFiles.length) {
         await Promise.map(localFiles, async filePath => {
-          const content = await this.diskDriver.readFile(path.join(tmpFolder, filePath))
-          await this.dbDriver.upsertFile(filePath, content, false)
-          await invalidateFile(filePath)
+          try {
+            const content = await this.diskDriver.readFile(path.join(tmpFolder, filePath))
+            await this.dbDriver.upsertFile(filePath, content, false)
+            await invalidateFile(filePath)
+          } catch (err) {
+            this.logger.error(`Error making changes to file ${filePath}: ${err.message}`)
+            throw err
+          }
         })
       }
     }

@@ -2,6 +2,7 @@ import { AdminServices } from 'admin/admin-router'
 import { CustomAdminRouter } from 'admin/utils/customAdminRouter'
 import { UnexpectedError } from 'common/http'
 import { extractArchive } from 'core/misc/archive'
+import e from 'express'
 import _ from 'lodash'
 import mkdirp from 'mkdirp'
 import path from 'path'
@@ -74,6 +75,7 @@ class VersioningRouter extends CustomAdminRouter {
           this.log('Sending back response')
           res.sendStatus(200)
         } catch (error) {
+          this.log('Error while pushing changes: ' + error.message)
           throw new UnexpectedError('Error while pushing changes', error)
         } finally {
           this.log('Removing temp dir')

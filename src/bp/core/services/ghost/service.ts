@@ -229,42 +229,48 @@ export class GhostService {
       localGhost: ScopedGhostService,
       remoteGhost: ScopedGhostService
     ) => {
-      this.logFileChanges('Started getFileChanges')
-      const localRevs = filterRevisions(await localGhost.listDiskRevisions())
-      const remoteRevs = filterRevisions(await remoteGhost.listDbRevisions())
-      const syncedRevs = _.intersectionBy(localRevs, remoteRevs, uniqueFile)
+      try {
+        this.logFileChanges('Started getFileChanges')
+        const localRevs = filterRevisions(await localGhost.listDiskRevisions())
+        const remoteRevs = filterRevisions(await remoteGhost.listDbRevisions())
+        const syncedRevs = _.intersectionBy(localRevs, remoteRevs, uniqueFile)
 
-      this.logFileChanges('Calculed Revs')
-      const unsyncedFiles = _.uniq(_.differenceBy(remoteRevs, syncedRevs, uniqueFile).map(x => x.path))
+        this.logFileChanges('Calculed Revs')
+        const unsyncedFiles = _.uniq(_.differenceBy(remoteRevs, syncedRevs, uniqueFile).map(x => x.path))
 
-      const localFiles: string[] = await getDirectoryFullPaths(botId, localGhost)
-      const remoteFiles: string[] = await getDirectoryFullPaths(botId, remoteGhost)
+        const localFiles: string[] = await getDirectoryFullPaths(botId, localGhost)
+        const remoteFiles: string[] = await getDirectoryFullPaths(botId, remoteGhost)
 
-      this.logFileChanges('Got files')
+        this.logFileChanges('Got files')
 
-      const deleted = _.difference(remoteFiles, localFiles).map(x => ({ path: x, action: 'del' as FileChangeAction }))
-      const added = _.difference(localFiles, remoteFiles).map(x => ({ path: x, action: 'add' as FileChangeAction }))
+        const deleted = _.difference(remoteFiles, localFiles).map(x => ({ path: x, action: 'del' as FileChangeAction }))
+        const added = _.difference(localFiles, remoteFiles).map(x => ({ path: x, action: 'add' as FileChangeAction }))
 
-      this.logFileChanges('Got added and deleted')
+        this.logFileChanges('Got added and deleted')
 
-      const filterDeleted = file => !_.map([...deleted, ...added], 'path').includes(file)
-      const filterDiffable = file => DIFFABLE_EXTS.includes(path.extname(file))
+        const filterDeleted = file => !_.map([...deleted, ...added], 'path').includes(file)
+        const filterDiffable = file => DIFFABLE_EXTS.includes(path.extname(file))
 
-      const editedFiles = unsyncedFiles.filter(filterDeleted)
-      const checkFileDiff = editedFiles.filter(filterDiffable)
-      const checkFileSize = unsyncedFiles.filter(x => !checkFileDiff.includes(x))
+        const editedFiles = unsyncedFiles.filter(filterDeleted)
+        const checkFileDiff = editedFiles.filter(filterDiffable)
+        const checkFileSize = unsyncedFiles.filter(x => !checkFileDiff.includes(x))
 
-      this.logFileChanges('Got all filters')
+        this.logFileChanges('Got all filters')
 
-      const edited = [
-        ...(await Promise.map(checkFileDiff, getFileDiff)).filter(x => x.add !== 0 || x.del !== 0),
-        ...(await Promise.map(checkFileSize, fileSizeDiff)).filter(x => x.sizeDiff !== 0)
-      ]
+        const edited = [
+          ...(await Promise.map(checkFileDiff, getFileDiff)).filter(x => x.add !== 0 || x.del !== 0),
+          ...(await Promise.map(checkFileSize, fileSizeDiff)).filter(x => x.sizeDiff !== 0)
+        ]
 
-      return {
-        botId,
-        changes: [...added, ...deleted, ...edited],
-        localFiles
+        return {
+          botId,
+          changes: [...added, ...deleted, ...edited],
+          localFiles
+        }
+      } catch (e) {
+        this.logger.error('Error gettingFileChanges: ' + e.message)
+        console.log(e)
+        throw e
       }
     }
 

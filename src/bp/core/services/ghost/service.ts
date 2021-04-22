@@ -135,6 +135,7 @@ export class GhostService {
           } catch (err) {
             console.log(`Error deleting file ${file.path}: ${err.message}`)
             this.logger.error(`Error deleting file ${file.path}: ${err.message}`)
+            this.logger.info(`Error deleting file ${file.path}: ${err.message}`)
             console.log(err)
           }
         }
@@ -149,6 +150,7 @@ export class GhostService {
             await invalidateFile(filePath)
           } catch (err) {
             console.log(`Error making changes to file ${filePath}: ${err.message}`)
+            this.logger.info(`Error deleting file ${file.path}: ${err.message}`)
             this.logger.error(`Error making changes to file ${filePath}: ${err.message}`)
             console.log(err)
           }

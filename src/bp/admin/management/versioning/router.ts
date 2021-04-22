@@ -67,7 +67,7 @@ class VersioningRouter extends CustomAdminRouter {
 
           // Unmount all previous bots and re-mount only the remaining (and new) bots
           this.log(`Unmounting bots: ${beforeBotIds.join(', ')}`)
-          await Promise.all(beforeBotIds.map(id => this.botService.unmountBot(id)))
+          await Promise.map(beforeBotIds, id => this.botService.unmountBot(id))
 
           this.log(`Mounting bots: ${newBotIds.join(', ')}`)
           await Promise.map(newBotIds, id => this.botService.mountBot(id))

@@ -123,7 +123,9 @@ export class GhostService {
     this.logger.info('[forceUpdate] Listing file changes')
     const allChanges = await this.listFileChanges(tmpFolder)
     this.logger.info(`[forceUpdate] Iterating on changes (count: ${allChanges.length})`)
+    this.logger.info(`[forceUpdate] Changes: ${JSON.stringify(allChanges, null, 2)}`)
     for (const { changes, localFiles } of allChanges) {
+      this.logger.info("Executing action === 'del'")
       await Promise.map(
         changes.filter(x => x.action === 'del'),
         async file => {
@@ -131,11 +133,13 @@ export class GhostService {
             await this.dbDriver.deleteFile(file.path)
             await invalidateFile(file.path)
           } catch (err) {
+            console.log(`Error deleting file ${file.path}: ${err.message}`)
             this.logger.error(`Error deleting file ${file.path}: ${err.message}`)
+            console.log(err)
           }
         }
       )
-
+      this.logger.info('Executing remaining actions')
       // Upload all local files for that scope
       if (localFiles.length) {
         await Promise.map(localFiles, async filePath => {
@@ -144,7 +148,9 @@ export class GhostService {
             await this.dbDriver.upsertFile(filePath, content, false)
             await invalidateFile(filePath)
           } catch (err) {
+            console.log(`Error making changes to file ${filePath}: ${err.message}`)
             this.logger.error(`Error making changes to file ${filePath}: ${err.message}`)
+            console.log(err)
           }
         })
       }

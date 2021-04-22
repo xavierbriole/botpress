@@ -146,6 +146,7 @@ export class DBStorageDriver implements StorageDriver {
           .del()
       }
     } catch (e) {
+      console.log(`Error deleting file ${filePath}: ${e.message}`)
       throw new VError(e, `[DB Storage] Error deleting file "${filePath}"`)
     }
   }

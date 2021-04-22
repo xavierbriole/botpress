@@ -588,11 +588,14 @@ export class BotService {
 
   // Do not use directly use the public version instead due to broadcasting
   private async _localMount(botId: string): Promise<boolean> {
+    this.logMounting('Starting mounting')
     const startTime = Date.now()
     if (this.isBotMounted(botId)) {
+      this.logMounting('Bot is already mounted')
       return true
     }
 
+    this.logMounting('Check if exists bot.config.json')
     if (!(await this.ghostService.forBot(botId).fileExists('/', 'bot.config.json'))) {
       this.logger
         .forBot(botId)
@@ -601,8 +604,10 @@ export class BotService {
     }
 
     try {
+      this.logMounting('Get config')
       const config = await this.configProvider.getBotConfig(botId)
       if (!config.languages.includes(config.defaultLanguage)) {
+        this.logMounting('Supported languages must include the default language of the bot')
         throw new Error('Supported languages must include the default language of the bot')
       }
 
@@ -614,14 +619,20 @@ export class BotService {
       const api = await createForGlobalHooks()
       this.logger.info(`[_localMount] executing afterBotMount hook (${botId})`)
       await this.hookService.executeHook(new Hooks.AfterBotMount(api, botId))
+      this.logMounting('Set as mounted')
       BotService._mountedBots.set(botId, true)
+      this.logMounting('Invalidate')
       this._invalidateBotIds()
 
+      this.logMounting('_botListenerHandles.has')
       if (BotService._botListenerHandles.has(botId)) {
+        this.logMounting('_botListenerHandles.get')
         BotService._botListenerHandles.get(botId)!.dispose()
+        this.logMounting('_botListenerHandles.delete')
         BotService._botListenerHandles.delete(botId)
       }
 
+      this.logMounting('BotService._botListenerHandles.set')
       BotService._botListenerHandles.set(
         botId,
         PersistedConsoleLogger.listenForAllLogs((level, message, args) => {
@@ -635,6 +646,7 @@ export class BotService {
         }, botId)
       )
 
+      this.logMounting('BotService.setBotStatus')
       BotService.setBotStatus(botId, 'healthy')
       return true
     } catch (err) {
@@ -650,25 +662,43 @@ export class BotService {
     }
   }
 
+  log(msg: string) {
+    this.logger.info(`[VersioningRouter][Unmounting] ${msg}`)
+  }
+
+  logMounting(msg: string) {
+    this.logger.info(`[VersioningRouter][Mounting] ${msg}`)
+  }
+
   // Do not use directly use the public version instead due to broadcasting
   private async _localUnmount(botId: string) {
+    this.log('Stating Unmounting ' + botId)
     const startTime = Date.now()
     if (!this.isBotMounted(botId)) {
       this._invalidateBotIds()
       return
     }
 
+    this.log('Clear Elements from cache')
     await this.cms.clearElementsFromCache(botId)
+    this.log('Unload modules for bot')
     await this.moduleLoader.unloadModulesForBot(botId)
 
+    this.log('Create for Global hooks')
     const api = await createForGlobalHooks()
+    this.log('Execute Hooks')
     await this.hookService.executeHook(new Hooks.AfterBotUnmount(api, botId))
 
+    this.log('Set as unmounted')
     BotService._mountedBots.set(botId, false)
+    this.log('Set as disabled')
     BotService.setBotStatus(botId, 'disabled')
 
+    this.log('Update bot healt debounce')
     await this._updateBotHealthDebounce()
+    this.log('Invalidate bot ids')
     this._invalidateBotIds()
+    this.log('Debug')
     debug.forBot(botId, `Unmount took ${Date.now() - startTime}ms`)
   }
 

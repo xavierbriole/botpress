@@ -65,12 +65,31 @@ class VersioningRouter extends CustomAdminRouter {
           this.log('Force updating BPFS')
           const newBotIds = await this.bpfs.forceUpdate(tmpDir.name)
 
+          this.logger.info('Waiting 10 seconds')
+          await new Promise(resolve => {
+            setTimeout(resolve, 10000)
+          })
+          this.logger.info('Done')
+
           // Unmount all previous bots and re-mount only the remaining (and new) bots
           this.log(`Unmounting bots: ${beforeBotIds.join(', ')}`)
-          await Promise.all(beforeBotIds.map(id => this.botService.unmountBot(id)))
+
+          for (const id of beforeBotIds) {
+            this.log(`Unmounting ${id}`)
+            await this.botService.unmountBot(id)
+          }
+
+          this.logger.info('Mounting')
+          await new Promise(resolve => {
+            setTimeout(resolve, 10000)
+          })
+          this.logger.info('Done')
 
           this.log(`Mounting bots: ${newBotIds.join(', ')}`)
-          await Promise.map(newBotIds, id => this.botService.mountBot(id))
+          for (const id of beforeBotIds) {
+            this.log(`Mounting ${id}`)
+            await this.botService.mountBot(id)
+          }
 
           this.log('Sending back response')
           res.sendStatus(200)
@@ -78,9 +97,8 @@ class VersioningRouter extends CustomAdminRouter {
           this.log('Error while pushing changes: ' + error.message)
           throw new UnexpectedError('Error while pushing changes', error)
         } finally {
-          this.log('Removing temp dir')
+          this.log('Done')
           tmpDir.removeCallback()
-          this.log('Removed temp dir')
         }
       })
     )

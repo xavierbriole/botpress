@@ -156,26 +156,31 @@ export class ScopedFlowService {
   ) {}
 
   async handleInvalidatedCache(flowName: string) {
-    if (this._flowCache.isEmpty()) {
-      return
-    }
+    try {
+      if (this._flowCache.isEmpty()) {
+        return
+      }
 
-    const flowPath = this.toFlowPath(flowName)
+      const flowPath = this.toFlowPath(flowName)
 
-    if (await this.ghost.fileExists(FLOW_DIR, flowPath)) {
-      const flow = await this.parseFlow(flowPath)
+      if (await this.ghost.fileExists(FLOW_DIR, flowPath)) {
+        const flow = await this.parseFlow(flowPath)
 
-      this._flowCache.upsertFlow(this.botId, flow)
-    } else {
-      this._flowCache.deleteFlow(this.botId, flowPath)
-    }
+        this._flowCache.upsertFlow(this.botId, flow)
+      } else {
+        this._flowCache.deleteFlow(this.botId, flowPath)
+      }
 
-    // parent flows are only used by the NDU
-    if (this._isOneFlow()) {
-      const flows = this._flowCache.get(this.botId)
-      const flowsWithParents = this.addParentsToFlows(flows)
+      // parent flows are only used by the NDU
+      if (this._isOneFlow()) {
+        const flows = this._flowCache.get(this.botId)
+        const flowsWithParents = this.addParentsToFlows(flows)
 
-      this._flowCache.set(this.botId, flowsWithParents)
+        this._flowCache.set(this.botId, flowsWithParents)
+      }
+      this.logger.critical('End handleInvalidate')
+    } catch (e) {
+      this.logger.error('Error Invalidating flow cache: ' + e.message)
     }
   }
 

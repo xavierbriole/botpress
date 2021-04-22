@@ -126,25 +126,36 @@ export class GhostService {
     this.logger.info(`[forceUpdate] Changes: ${JSON.stringify(allChanges, null, 2)}`)
     for (const { changes, localFiles } of allChanges) {
       this.logger.info("Executing action === 'del'")
-      await Promise.map(
-        changes.filter(x => x.action === 'del'),
-        async file => {
-          try {
-            await this.dbDriver.deleteFile(file.path)
-            await invalidateFile(file.path)
-          } catch (err) {
-            console.log(`Error deleting file ${file.path}: ${err.message}`)
-            this.logger.error(`Error deleting file ${file.path}: ${err.message}`)
-            this.logger.info(`Error deleting file ${file.path}: ${err.message}`)
-            console.log(err)
-          }
+      this.logger.info('Waiting 2seconds')
+      await new Promise(resolve => {
+        setTimeout(resolve, 2000)
+      })
+      this.logger.info('Done')
+      for (const file of changes.filter(x => x.action === 'del')) {
+        try {
+          this.logger.info('Deleting File: ' + file.path)
+          await this.dbDriver.deleteFile(file.path)
+          this.logger.info('Invalidating File')
+          await invalidateFile(file.path)
+        } catch (err) {
+          console.log(`Error deleting file ${file.path}: ${err.message}`)
+          this.logger.error(`Error deleting file ${file.path}: ${err.message}`)
+          this.logger.info(`Error deleting file ${file.path}: ${err.message}`)
+          console.log(err)
         }
-      )
+      }
+
+      this.logger.info('Executing remaining actions, but waiting 6 seconds')
+      await new Promise(resolve => {
+        setTimeout(resolve, 6000)
+      })
+      this.logger.info('Done')
       this.logger.info('Executing remaining actions')
       // Upload all local files for that scope
       if (localFiles.length) {
-        await Promise.map(localFiles, async filePath => {
+        for (const filePath of localFiles) {
           try {
+            this.logger.info('Executing one remaining')
             const content = await this.diskDriver.readFile(path.join(tmpFolder, filePath))
             await this.dbDriver.upsertFile(filePath, content, false)
             await invalidateFile(filePath)
@@ -154,7 +165,7 @@ export class GhostService {
             this.logger.error(`Error making changes to file ${filePath}: ${err.message}`)
             console.log(err)
           }
-        })
+        }
       }
     }
 

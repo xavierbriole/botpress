@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap'); */
 
 @font-face {
   font-family: Roobert;
@@ -10,6 +10,10 @@
   src: url('Roobert-SemiBold.otf');
   font-weight: bold;
 }
+
+/* .bp-widget-web {
+  z-index: 1000;
+} */
 
 body {
   font-family: Roobert, sans-serif;

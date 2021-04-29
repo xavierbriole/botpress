@@ -1,96 +1,70 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import _ from 'lodash'
 import { schema } from './formSchema'
 import classes from './FormComponent.scss'
 
-const ERROR_WAIT = 1000
-
-const Input = ({ schema, onChange, onValidation, value, show, ...props }) => {
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    let newError = schema.validate(value)
-    newError = value.trim() === '' ? null : error
-    const errorAlreadyShown = error && newError
-    if (errorAlreadyShown) {
-      setError(newError)
-      return
-    }
-    const timeoutHandle = setTimeout(() => {
-      setError(newError)
-    }, ERROR_WAIT)
-    return () => clearTimeout(timeoutHandle)
-  }, [value, setError, error])
-
-  useEffect(() => {
-    onValidation(error)
-  }, [error])
-
-  return (
-    <div className={classes.Group} style={show ? { height: '0px' } : {}}>
-      <input
-        style={
-          show ? { opacity: '1' } : { opacity: '0', height: '0px', border: '0px', margin: '0px', cursor: 'default' }
-        }
-        className={error ? classes.Input + ' ' + classes.InputError : classes.Input}
-        value={value}
-        placeholder={schema.fieldName || ''}
-        onChange={onChange}
-        {...props}
-      />
-      <div className={classes.Error} style={error ? { opacity: '1' } : { height: '0px', opacity: '0' }}>
-        {error}
-      </div>
-    </div>
-  )
-}
-
 export const FormComponent = props => {
-  // if (!(props.isLastGroup && props.isLastOfGroup)) {
-  //   return <p>{'[A form was here!]'}</p>
-  // }
+  if (!(props.isLastGroup && props.isLastOfGroup)) {
+    return <p>{'[A form was here!]'}</p>
+  }
 
   const [values, setValues] = useState({})
-  const [valid, setValid] = useState({})
-  const [show, setShow] = useState({})
+  const [errors, setErrors] = useState({})
+  const [shouldShow, setShouldShow] = useState({})
 
-  const formFields = useMemo(() => _.pick(props, Object.keys(schema)), [])
-  // const setShowState = (formFields, errorState) => {
-  //   const showInputs = { ...shouldShow }
+  const setErrorsState = formFields => {
+    const formErrors = {}
+    Object.keys(schema).forEach(key => {
+      const error = schema[key].validate(formFields[key])
+      formErrors[key] = formFields[key].trim() === '' ? null : error
+    })
 
-  //   Object.keys(schema).forEach(key => {
-  //     if (showInputs[key]) {
-  //       // Already been shown, do not remove it
-  //       return
-  //     }
+    setErrors(formErrors)
+    return formErrors
+  }
 
-  //     const dependencies = schema[key].dependsOn
-  //     if (dependencies.length > 0) {
-  //       // Check if there is an error for a dependency in the errorState
-  //       const foundError = !!dependencies.find(key => {
-  //         return !!errorState[key] || formFields[key].trim() === ''
-  //       })
+  const setShowState = (formFields, errorState, debounceShow) => {
+    const showInputs = debounceShow || shouldShow
 
-  //       showInputs[key] = !foundError
-  //       return !foundError
-  //     }
-  //     showInputs[key] = true
-  //   })
+    Object.keys(schema).forEach(key => {
+      if (showInputs[key]) {
+        // Already been shown, do not remove it
+        return
+      }
 
-  // setShouldShow(showInputs)
+      const dependencies = schema[key].dependsOn
+      if (dependencies.length > 0) {
+        // Check if there is an error for a dependency in the errorState
+        const foundError = !!dependencies.find(key => {
+          return !!errorState[key] || formFields[key].trim() === ''
+        })
+
+        showInputs[key] = !foundError
+        return !foundError
+      }
+      showInputs[key] = true
+    })
+
+    setShouldShow({ ...showInputs })
+  }
 
   useEffect(() => {
     props.store.composer.setLocked(true)
     props.store.composer.setHidden(true)
 
-    // const errorState = setErrorsState(formFields)
-    // setShowState(formFields, errorState)
+    const formFields = _.pick(props, Object.keys(schema))
+    const errorState = setErrorsState(formFields)
+    setShowState(formFields, errorState)
     setValues({ ...values, ...formFields })
   }, [])
 
-  const showFields = useMemo(() => {
-    return Object.keys(formFields).map(field => schema[field].dependsOn.every(() => valid[field]))
-  }, [setShow, show, formFields, valid])
+  const delayedSetShowAndError = useCallback(
+    _.debounce((values, errorState, shouldShow) => {
+      setErrors(errorState)
+      setShowState(values, errorState, shouldShow)
+    }, 500),
+    []
+  )
 
   const handleChange = (key, event) => {
     const newValues = {
@@ -98,8 +72,12 @@ export const FormComponent = props => {
       [key]: event.target.value
     }
 
-    // setShowState(values, errorState)
+    const errorState = { ...errors }
+    const error = schema[key].validate(newValues[key])
+    errorState[key] = error
+
     setValues(newValues)
+    delayedSetShowAndError(newValues, errorState, shouldShow)
   }
 
   const handleSubmit = event => {
@@ -109,78 +87,57 @@ export const FormComponent = props => {
     props.store.composer.setHidden(false)
   }
 
-  const handleValidation = useCallback(
-    (key, validation) => {
-      setValid({ ...valid, [key]: validation })
-    },
-    [setValid, valid]
-  )
+  const handleBlur = key => {
+    const errorState = { ...errors }
+    const error = schema[key].validate(values[key])
+    errorState[key] = error
+    setShowState(values, errorState)
+    setErrors(errorState)
+  }
 
   return (
     <form onSubmit={handleSubmit} className={classes.Form}>
+      <div className={classes.Logo}></div>
+      <p className={classes.P}>
+        Please fill out the form below and someone from our sales team will get back to you shortly.
+      </p>
       {Object.entries(values).map(([key, value]) => (
-        <Input
-          key={key}
-          value={value}
-          schema={schema[key]}
-          show={showFields[key] || true}
-          onChange={evt => handleChange(key, evt)}
-          onValidation={v => handleValidation(key, v)}
-        />
+        <div className={classes.Group} style={!shouldShow[key] ? { height: '0px' } : {}} key={key}>
+          <input
+            style={
+              shouldShow[key]
+                ? { opacity: '1' }
+                : { opacity: '0', height: '0px', border: '0px', margin: '0px', cursor: 'default' }
+            }
+            className={errors[key] ? classes.Input + ' ' + classes.InputError : classes.Input}
+            value={value}
+            placeholder={schema[key].fieldName || ''}
+            onChange={event => {
+              handleChange(key, event)
+            }}
+            onBlur={
+              shouldShow[key]
+                ? () => handleBlur(key)
+                : e => {
+                    e.preventDefault()
+                  }
+            }
+          />
+          {
+            <div className={classes.Error} style={!errors[key] ? { height: '0px', opacity: '0' } : { opacity: '1' }}>
+              {errors[key] && errors[key]}
+            </div>
+          }
+        </div>
       ))}
+      <p className={classes.Privacy}>
+        By clicking submit, you agree to our
+        <a href="https://botpress.com/privacy" target="_blank">
+          privacy policy
+        </a>
+        .
+      </p>
+      <input className={classes.Button} type="submit" value="Submit" />
     </form>
   )
 }
-
-// const handleBlur = key => {
-//   const errorState = { ...errors }
-//   const error = schema[key].validate(values[key])
-//   errorState[key] = error
-//   setShowState(values, errorState)
-//   setErrors(errorState)
-// }
-
-// const setErrorsState = formFields => {
-//   const formErrors = {}
-//   Object.keys(schema).forEach(key => {
-//     const error = schema[key].validate(formFields[key])
-//     formErrors[key] = formFields[key].trim() === '' ? null : error
-//   })
-
-//   setErrors(formErrors)
-//   return formErrors
-// }
-// return (
-//   <form onSubmit={handleSubmit} className={classes.Form}>
-//     {Object.entries(values).map(([key, value]) => (
-//       <div className={classes.Group} style={!shouldShow[key] ? { height: '0px' } : {}} key={key}>
-//         <input
-//           style={
-//             shouldShow[key]
-//               ? { opacity: '1' }
-//               : { opacity: '0', height: '0px', border: '0px', margin: '0px', cursor: 'default' }
-//           }
-//           className={errors[key] ? classes.Input + ' ' + classes.InputError : classes.Input}
-//           value={value}
-//           placeholder={schema[key].fieldName || ''}
-//           onChange={event => {
-//             handleChange(key, event)
-//           }}
-//           // onBlur={
-//           //   shouldShow[key]
-//           //     ? () => handleBlur(key)
-//           //     : e => {
-//           //         e.preventDefault()
-//           //       }
-//           // }
-//         />
-//         {errors[key] && (
-//           <div className={classes.Error} style={!errors[key] ? { height: '0px', opacity: '0' } : { opacity: '1' }}>
-//             {errors[key]}
-//           </div>
-//         )}
-//       </div>
-//     ))}
-//     <input className={classes.Button} type="submit" value="Submit" />
-//   </form>
-// )

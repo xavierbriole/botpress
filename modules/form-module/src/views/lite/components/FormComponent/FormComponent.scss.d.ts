@@ -2,11 +2,15 @@
 // Please do not change this file!
 interface CssExports {
   'Button': string;
+  'Disabled': string;
   'Error': string;
   'Form': string;
   'Group': string;
   'Input': string;
   'InputError': string;
+  'Logo': string;
+  'P': string;
+  'Privacy': string;
 }
 declare var cssExports: CssExports;
 export = cssExports;

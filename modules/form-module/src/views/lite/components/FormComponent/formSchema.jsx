@@ -9,7 +9,7 @@ export const schema = {
       if (/[^a-zA-Z -]/.test(value)) {
         return 'Invalid characters'
       }
-      if (value.trim().length <= 3) {
+      if (value.trim().length < 3) {
         return 'First Name needs to be at least three characters'
       }
       return null
@@ -25,7 +25,7 @@ export const schema = {
       if (/[^a-zA-Z -]/.test(value)) {
         return 'Invalid characters'
       }
-      if (value.trim().length <= 3) {
+      if (value.trim().length < 3) {
         return 'Last Name needs to be at least three characters'
       }
       return null
@@ -60,7 +60,7 @@ export const schema = {
       if (value.trim() === '') {
         return 'Job Title is required'
       }
-      if (value.trim().length <= 3) {
+      if (value.trim().length < 3) {
         return 'Job Title needs to be at least three characters'
       }
       return null
@@ -73,7 +73,7 @@ export const schema = {
       if (value.trim() === '') {
         return 'Company Name is required'
       }
-      if (value.trim().length <= 3) {
+      if (value.trim().length < 3) {
         return 'Company Name needs to be at least three characters'
       }
       return null
@@ -86,7 +86,7 @@ export const schema = {
       if (value.trim() === '') {
         return 'Use Case is required'
       }
-      if (value.trim().length <= 3) {
+      if (value.trim().length < 3) {
         return 'Use Case needs to be at least three characters'
       }
       return null

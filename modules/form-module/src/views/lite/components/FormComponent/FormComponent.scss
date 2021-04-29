@@ -1,5 +1,16 @@
+@font-face {
+  font-family: Roobert;
+  src: url('/assets/modules/form-module/Roobert-Regular.otf');
+}
+
+@font-face {
+  font-family: Roobert;
+  src: url('/assets/modules/form-module/Roobert-SemiBold.otf');
+  font-weight: bold;
+}
+
 .Form {
-  font-family: Roboto;
+  font-family: Roobert;
   width: 225px;
 
   position: absolute;
@@ -14,13 +25,36 @@
   flex-direction: column;
 }
 
+.P {
+  font-family: Roobert;
+  margin: 8px 4px !important;
+}
+
+.Privacy {
+  font-family: Roobert;
+  // margin-left: 4px;
+  // margin-right: 4px;
+  margin-top: auto !important;
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+}
+
 .Group {
-  font-family: Roboto;
+  font-family: Roobert;
   transition: all 0.3s ease-in-out;
 }
 
+.Logo {
+  height: 50px;
+  margin: 8px;
+  background-image: url('/assets/modules/form-module/Logo-black.png');
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
 .Input {
-  font-family: Roboto;
+  font-family: Roobert;
   border: 0px;
   border-radius: 5px;
   box-shadow: 0px 0px 4px 0px rgb(125, 125, 125);
@@ -37,7 +71,7 @@
 }
 
 .Button {
-  font-family: Roboto;
+  font-family: Roobert;
   width: 100%;
   height: 25px;
   color: white;
@@ -48,11 +82,16 @@
   transition: all 0.3s ease-in-out;
   margin-top: 8px;
   cursor: pointer;
-  margin-top: auto;
+  margin-top: 8px;
+}
+
+.Disabled {
+  cursor: default;
+  background-color: #4a505738;
 }
 
 .Error {
-  font-family: Roboto;
+  font-family: Roobert;
   text-align: right;
   color: #d41313;
   width: 100%;

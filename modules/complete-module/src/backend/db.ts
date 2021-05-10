@@ -1,6 +1,6 @@
 import * as sdk from 'botpress/sdk'
 
-const TABLE_NAME = 'complete_mod_requests'
+const TABLE_NAME = 'complete_mod_users'
 
 export default class CompleteModuleDB {
   knex: sdk.KnexExtended
@@ -12,15 +12,16 @@ export default class CompleteModuleDB {
   initialize() {
     return this.knex.createTableIfNotExists(TABLE_NAME, table => {
       table.increments('id').primary()
-      table.timestamp('created_on')
+      table.string('name')
+      table.string('role')
     })
   }
 
-  async addRequest() {
-    await this.knex(TABLE_NAME).insert({ created_on: new Date() })
+  async addUser(name: string, role: string) {
+    await this.knex(TABLE_NAME).insert({ name, role })
   }
 
-  async getRequests() {
-    return await this.knex(TABLE_NAME).select('id', 'created_on')
+  async getUsers() {
+    return await this.knex(TABLE_NAME).select('id', 'name', 'role')
   }
 }

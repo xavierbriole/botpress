@@ -1,9 +1,12 @@
 import * as sdk from 'botpress/sdk'
 
 import api from './api'
+import DB from './db'
 
 // This is called when server is started, usually to set up the database
-const onServerStarted = async (bp: typeof sdk) => {}
+const onServerStarted = async (bp: typeof sdk) => {
+  await new DB(bp).initialize()
+}
 
 // At this point, you would likely setup the API route of your module.
 const onServerReady = async (bp: typeof sdk) => {

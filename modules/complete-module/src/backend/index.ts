@@ -10,7 +10,7 @@ const onServerStarted = async (bp: typeof sdk) => {
 
 // At this point, you would likely setup the API route of your module.
 const onServerReady = async (bp: typeof sdk) => {
-  await api(bp)
+  await api(bp, new DB(bp))
 }
 
 // Every time a bot is created (or enabled), this method will be called with the bot id

@@ -1,6 +1,7 @@
 import * as sdk from 'botpress/sdk'
+import DB from './db'
 
-export default async (bp: typeof sdk) => {
+export default async (bp: typeof sdk, db: DB) => {
   /**
    * This is an example route to get you started.
    * Your API will be available at `http://localhost:3000/api/v1/bots/BOT_NAME/mod/complete-module`
@@ -20,6 +21,14 @@ export default async (bp: typeof sdk) => {
     const config = await bp.config.getModuleConfigForBot('complete-module', botId)
 
     const now = new Date().toISOString()
+
+    await db.addRequest()
+
     res.send(`It is now ${now}`)
+  })
+
+  router.get('/requests', async (req, res) => {
+    const requests = await db.getRequests()
+    res.send({ requests })
   })
 }

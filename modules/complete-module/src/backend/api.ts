@@ -19,6 +19,7 @@ export default async (bp: typeof sdk) => {
      */
     const config = await bp.config.getModuleConfigForBot('complete-module', botId)
 
-    res.sendStatus(200)
+    const now = new Date().toISOString()
+    res.send(`It is now ${now}`)
   })
 }

@@ -1,0 +1,10 @@
+{
+  "types": {
+    "userCard": {
+      "description": "A message that displays user information",
+      "id": "The user ID",
+      "name": "The user's name",
+      "role": "The user's role"
+    }
+  }
+}

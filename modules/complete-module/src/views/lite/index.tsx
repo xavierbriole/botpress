@@ -11,3 +11,5 @@ export class LiteView extends React.Component {
     return null
   }
 }
+
+export { UserCard } from './UserCard'

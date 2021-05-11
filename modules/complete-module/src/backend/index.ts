@@ -3,6 +3,8 @@ import * as sdk from 'botpress/sdk'
 import api from './api'
 import DB from './db'
 
+import en from '../translations/en.json'
+
 // This is called when server is started, usually to set up the database
 const onServerStarted = async (bp: typeof sdk) => {
   await new DB(bp).initialize()
@@ -41,6 +43,7 @@ const entryPoint: sdk.ModuleEntryPoint = {
   onBotUnmount,
   onFlowChanged,
   botTemplates,
+  translations: { en },
   skills,
   definition: {
     // This must match the name of your module's folder, and the name in package.json

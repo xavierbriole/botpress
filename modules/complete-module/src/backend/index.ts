@@ -5,6 +5,8 @@ import DB from './db'
 
 import en from '../translations/en.json'
 
+import createUser from './skills/createUser'
+
 // This is called when server is started, usually to set up the database
 const onServerStarted = async (bp: typeof sdk) => {
   await new DB(bp).initialize()
@@ -34,7 +36,14 @@ const botTemplates: sdk.BotTemplate[] = [{ id: 'my_bot_demo', name: 'Bot Demo', 
  * Skills allows you to create custom logic and use them easily on the flow editor
  * Check this link for more information: https://botpress.com/docs/developers/create-module/#skill-creation
  */
-const skills: sdk.Skill[] = []
+const skills: sdk.Skill[] = [
+  {
+    id: 'CreateUser',
+    name: 'module.complete-module.skills.createUser',
+    icon: 'user',
+    flowGenerator: createUser.generateFlow
+  }
+]
 
 const entryPoint: sdk.ModuleEntryPoint = {
   onServerStarted,

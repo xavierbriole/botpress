@@ -11,5 +11,10 @@
     "watch": "node ../../build/module-builder/bin/entry watch",
     "package": "node ../../build/module-builder/bin/entry package"
   },
+  "webpack": {
+    "externals": {
+      "botpress/content-picker": "BotpressContentPicker"
+    }
+  },
   "dependencies": {}
 }

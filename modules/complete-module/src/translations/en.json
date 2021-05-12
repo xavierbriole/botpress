@@ -6,5 +6,8 @@
       "name": "The user's name",
       "role": "The user's role"
     }
+  },
+  "skills": {
+    "createUser": "Create User"
   }
 }

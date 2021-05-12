@@ -16,3 +16,4 @@ const MyMainView: FC<any> = ({ bp }) => {
 }
 
 export default MyMainView
+export { CreateUser } from './CreateUser'

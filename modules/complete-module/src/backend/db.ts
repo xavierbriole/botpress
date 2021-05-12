@@ -2,6 +2,11 @@ import * as sdk from 'botpress/sdk'
 
 const TABLE_NAME = 'complete_mod_users'
 
+interface User {
+  id: number
+  name: string
+  role: string
+}
 export default class CompleteModuleDB {
   knex: sdk.KnexExtended
 
@@ -18,7 +23,8 @@ export default class CompleteModuleDB {
   }
 
   async addUser(name: string, role: string) {
-    await this.knex(TABLE_NAME).insert({ name, role })
+    const { id } = await this.knex.insertAndRetrieve<User>(TABLE_NAME, { name, role }, ['id'])
+    return id
   }
 
   async getUsers() {

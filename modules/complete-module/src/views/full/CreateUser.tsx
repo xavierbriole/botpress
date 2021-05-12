@@ -41,7 +41,7 @@ export const CreateUser: FC<any> = props => {
       nameContentId,
       roleContentId
     })
-    if (nameContentId ** roleContentId) {
+    if (nameContentId && roleContentId) {
       props.onValidChanged(true)
     }
   }

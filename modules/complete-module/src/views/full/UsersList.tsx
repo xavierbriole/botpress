@@ -11,7 +11,6 @@ const UsersList: FC<any> = ({ bp }) => {
       setUsers(users)
     }
 
-    console.log('fetching users')
     fetchUsers()
   }, [])
 

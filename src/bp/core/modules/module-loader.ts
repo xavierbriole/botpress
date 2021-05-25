@@ -63,7 +63,8 @@ const MODULE_SCHEMA = joi.object().keys({
     menuIcon: joi.string().optional(),
     menuText: joi.string().optional(),
     homepage: joi.string().optional(),
-    experimental: joi.boolean().optional()
+    experimental: joi.boolean().optional(),
+    workspaceApp: joi.object().optional()
   })
 })
 
@@ -319,7 +320,8 @@ export class ModuleLoader {
         const api = await createForModule(module.name)
         await entryPoint.onBotMount?.(api, botId)
       } catch (err) {
-        throw new Error(`while mounting bot in module ${module.name}: ${err}`)
+        const details = err.response ? `for url ${err.response.config?.url}` : ''
+        throw new Error(`while mounting bot in module ${module.name}: ${err} ${details}`)
       }
     }
   }

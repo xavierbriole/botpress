@@ -1,18 +1,17 @@
 import * as sdk from 'botpress/sdk'
 import _ from 'lodash'
 
-import { allInRange, GetZPercent, std } from '../tools/math'
-
+import { detectAmbiguity } from './ambiguous'
+import { GetZPercent, std } from './math'
 import { NONE_INTENT } from './typings'
 
 const OOS_AS_NONE_TRESH = 0.4
 const LOW_INTENT_CONFIDENCE_TRESH = 0.4
 
+type IntentPred = sdk.NLU.ContextPrediction['intents'][0]
+
 // @deprecated > 13
 export default function legacyElectionPipeline(input: sdk.IO.EventUnderstanding) {
-  if (!input.predictions) {
-    return input
-  }
   let step = electIntent(input)
   step = detectAmbiguity(step)
   step = extractElectedIntentSlot(step)
@@ -20,10 +19,15 @@ export default function legacyElectionPipeline(input: sdk.IO.EventUnderstanding)
 }
 
 function electIntent(input: sdk.IO.EventUnderstanding): sdk.IO.EventUnderstanding {
-  const allCtx = Object.keys(input.predictions)
+  const inputPredictions = input.predictions
+  if (!inputPredictions) {
+    return input
+  }
+
+  const allCtx = Object.keys(inputPredictions)
 
   const ctx_predictions = allCtx.map(label => {
-    const { confidence } = input.predictions[label]
+    const { confidence } = inputPredictions[label]
     return { label, confidence }
   })
 
@@ -61,7 +65,7 @@ function electIntent(input: sdk.IO.EventUnderstanding): sdk.IO.EventUnderstandin
         })
         .map(p => ({ ...p, confidence: _.round(p.confidence, 2) }))
         .orderBy('confidence', 'desc')
-        .value() as (sdk.MLToolkit.SVM.Prediction & { context: string })[]
+        .value() as (IntentPred & { context: string })[]
 
       const noneIntent = { label: NONE_INTENT, context: ctx, confidence: 1 }
       if (!intentPreds.length) {
@@ -72,7 +76,13 @@ function electIntent(input: sdk.IO.EventUnderstanding): sdk.IO.EventUnderstandin
       // else, there is at least two intentPreds
 
       if (predictionsReallyConfused(intentPreds)) {
-        intentPreds.unshift(noneIntent)
+        intentPreds.unshift({
+          label: noneIntent.label,
+          confidence: noneIntent.confidence,
+          slots: {},
+          extractor: '',
+          context: noneIntent.context
+        })
       }
 
       const lnstd = std(intentPreds.filter(x => x.confidence !== 0).map(x => Math.log(x.confidence))) // because we want a lognormal distribution
@@ -91,7 +101,7 @@ function electIntent(input: sdk.IO.EventUnderstanding): sdk.IO.EventUnderstandin
         }
       ]
     })
-    .orderBy('confidence', 'desc')
+    .orderBy(i => i.confidence, 'desc')
     .filter(p => input.includedContexts.includes(p.context))
     .uniqBy(p => p.label)
     .map(p => ({ name: p.label, context: p.context, confidence: p.confidence }))
@@ -121,23 +131,12 @@ function electIntent(input: sdk.IO.EventUnderstanding): sdk.IO.EventUnderstandin
   }
 }
 
-function detectAmbiguity(input: sdk.IO.EventUnderstanding): sdk.IO.EventUnderstanding {
-  // +- 10% away from perfect median leads to ambiguity
-  const preds = input.intents!
-  const perfectConfusion = 1 / preds.length
-  const low = perfectConfusion - 0.1
-  const up = perfectConfusion + 0.1
-  const confidenceVec = preds.map(p => p.confidence)
-
-  const ambiguous =
-    preds.length > 1 &&
-    (allInRange(confidenceVec, low, up) ||
-      (preds[0].name === NONE_INTENT && allInRange(confidenceVec.slice(1), low, up)))
-
-  return { ...input, ambiguous }
-}
-
 function extractElectedIntentSlot(input: sdk.IO.EventUnderstanding): sdk.IO.EventUnderstanding {
+  const inputPredictions = input.predictions
+  if (!inputPredictions) {
+    return input
+  }
+
   const intentWasElectedWithoutAmbiguity = input?.intent?.name && !_.isEmpty(input.predictions) && !input.ambiguous
   const intentIsNone = input?.intent?.name === NONE_INTENT
   if (!intentWasElectedWithoutAmbiguity || intentIsNone) {
@@ -145,13 +144,13 @@ function extractElectedIntentSlot(input: sdk.IO.EventUnderstanding): sdk.IO.Even
   }
 
   const elected = input.intent!
-  const electedIntent = input.predictions[elected.context].intents.find(i => i.label === elected.name)
+  const electedIntent = inputPredictions[elected.context].intents.find(i => i.label === elected.name)
   return { ...input, slots: electedIntent!.slots }
 }
 
 // taken from svm classifier #295
 // this means that the 3 best predictions are really close, do not change magic numbers
-function predictionsReallyConfused(predictions: sdk.MLToolkit.SVM.Prediction[]): boolean {
+function predictionsReallyConfused(predictions: IntentPred[]): boolean {
   if (predictions.length <= 2) {
     return false
   }

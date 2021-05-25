@@ -33,7 +33,18 @@ describe('Admin - Bot Management', () => {
     await fillField('#input-botId', importBotId)
     await uploadFile('input[type="file"]', path.join(__dirname, '../assets/bot-import-test.tgz'))
     await clickOn('#btn-upload')
-    await expectAdminApiCallSuccess(`bots/${importBotId}/import`, 'POST')
+    await expectAdminApiCallSuccess(`workspace/bots/${importBotId}/import`, 'POST')
+  })
+
+  it('Open Bot Analytics', async () => {
+    await clickButtonForBot('#btn-apps', importBotId)
+
+    await Promise.all([
+      expectModuleApiCallSuccess('analytics', importBotId, 'channel/all', 'GET'),
+      clickOn('#btn-menu-analytics')
+    ])
+
+    await gotoAndExpect(`${bpConfig.host}/admin/workspace/${workspaceId}/bots`)
   })
 
   it('Delete imported bot', async () => {
@@ -41,7 +52,7 @@ describe('Admin - Bot Management', () => {
 
     await page.waitFor(1000)
     await clickOn(CONFIRM_DIALOG.ACCEPT)
-    await expectAdminApiCallSuccess(`bots/${importBotId}/delete`, 'POST')
+    await expectAdminApiCallSuccess(`workspace/bots/${importBotId}/delete`, 'POST')
     await page.waitFor(200)
   })
 
@@ -54,7 +65,7 @@ describe('Admin - Bot Management', () => {
     await fillField('#select-bot-templates', 'Welcome Bot') // Using fill instead of select because options are created dynamically
     await page.keyboard.press('Enter')
 
-    await Promise.all([expectAdminApiCallSuccess('bots', 'POST'), clickOn('#btn-modal-create-bot')])
+    await Promise.all([expectAdminApiCallSuccess('workspace/bots', 'POST'), clickOn('#btn-modal-create-bot')])
   })
 
   it('Train Warning', async () => {
@@ -64,7 +75,7 @@ describe('Admin - Bot Management', () => {
   it('Export bot', async () => {
     await clickButtonForBot('#btn-export', tempBotId)
 
-    const response = await page.waitForResponse(`${bpConfig.host}/api/v1/admin/bots/${tempBotId}/export`)
+    const response = await page.waitForResponse(`${bpConfig.host}/api/v2/admin/workspace/bots/${tempBotId}/export`)
     expect(response.status()).toBe(200)
 
     const responseSize = Number(response.headers()['content-length'])
@@ -73,7 +84,7 @@ describe('Admin - Bot Management', () => {
 
   it('Create revision', async () => {
     await Promise.all([
-      expectAdminApiCallSuccess(`bots/${tempBotId}/revisions`, 'POST'),
+      expectAdminApiCallSuccess(`workspace/bots/${tempBotId}/revisions`, 'POST'),
       clickButtonForBot('#btn-createRevision', tempBotId)
     ])
     await closeToaster()
@@ -87,7 +98,10 @@ describe('Admin - Bot Management', () => {
     await page.keyboard.press('Enter')
     await clickOn('#chk-confirm')
 
-    await Promise.all([expectAdminApiCallSuccess(`bots/${tempBotId}/rollback`, 'POST'), clickOn('#btn-submit')])
+    await Promise.all([
+      expectAdminApiCallSuccess(`workspace/bots/${tempBotId}/rollback`, 'POST'),
+      clickOn('#btn-submit')
+    ])
     await page.waitFor(500)
   })
 
@@ -95,7 +109,7 @@ describe('Admin - Bot Management', () => {
     await clickButtonForBot('#btn-delete', tempBotId)
     await page.waitFor(1000)
     await clickOn(CONFIRM_DIALOG.ACCEPT)
-    await expectAdminApiCallSuccess(`bots/${tempBotId}/delete`, 'POST')
+    await expectAdminApiCallSuccess(`workspace/bots/${tempBotId}/delete`, 'POST')
     await page.waitFor(200)
   })
 })

@@ -11,9 +11,13 @@ export class MessagingRouter extends CustomRouter {
   }
 
   public setupRoutes(): void {
-    this.router.post('/receive', (req, res) => {
+    this.router.post('/receive', async (req, res) => {
       const msg = req.body
-      console.log(`Received from ${msg.channel.name}`, msg.message)
+
+      console.log(`Received from ${msg.channel.name}`, msg)
+      await this.messaging.receive(msg.channel.name, msg.user.id, msg.conversation.id, msg.message)
+
+      res.sendStatus(200)
     })
   }
 }

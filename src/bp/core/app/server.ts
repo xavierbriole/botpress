@@ -19,6 +19,8 @@ import { JobService } from 'core/distributed'
 import { AlertingService, MonitoringService } from 'core/health'
 import { LogsRepository } from 'core/logger'
 import { MediaServiceProvider, MediaRouter } from 'core/media'
+import { MessagingRouter } from 'core/messaging/messaging-router'
+import { MessagingService } from 'core/messaging/messaging-service'
 import { ModuleLoader, ModulesRouter } from 'core/modules'
 import { getSocketTransports, RealtimeService } from 'core/realtime'
 import { InvalidExternalToken, PaymentRequiredError, monitoringMiddleware } from 'core/routers'
@@ -80,6 +82,7 @@ export class HTTPServer {
   private mediaRouter: MediaRouter
   private readonly sdkApiRouter!: SdkApiRouter
   private internalRouter: InternalRouter
+  private messagingRouter: MessagingRouter
   private _needPermissions: (
     operation: string,
     resource: string
@@ -121,7 +124,8 @@ export class HTTPServer {
     @inject(TYPES.NLUService) nluService: NLUService,
     @inject(TYPES.TelemetryRepository) private telemetryRepo: TelemetryRepository,
     @inject(TYPES.RealtimeService) private realtime: RealtimeService,
-    @inject(TYPES.ObjectCache) private objectCache: MemoryObjectCache
+    @inject(TYPES.ObjectCache) private objectCache: MemoryObjectCache,
+    @inject(TYPES.MessagingService) private messagingService: MessagingService
   ) {
     this.app = express()
 
@@ -194,6 +198,8 @@ export class HTTPServer {
       this.realtime,
       this.objectCache
     )
+
+    this.messagingRouter = new MessagingRouter(this.logger, messagingService)
 
     this._needPermissions = needPermissions(this.workspaceService)
     this._hasPermissions = hasPermissions(this.workspaceService)
@@ -351,10 +357,12 @@ export class HTTPServer {
     this.adminRouter.setupRoutes(this.app)
     await this.botsRouter.setupRoutes(this.app)
     this.internalRouter.setupRoutes()
+    this.messagingRouter.setupRoutes()
 
     this.app.use('/assets', this.guardWhiteLabel(), express.static(resolveAsset('')))
 
     this.app.use('/api/internal', this.internalRouter.router)
+    this.app.use('/messaging', this.messagingRouter.router)
     this.app.use(`${BASE_API_PATH}/modules`, this.modulesRouter.router)
 
     this.app.use(`${BASE_API_PATH}/sdk`, this.sdkApiRouter.router)

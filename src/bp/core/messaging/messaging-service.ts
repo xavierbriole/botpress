@@ -1,5 +1,8 @@
 import { TYPES } from 'core/types'
-import { injectable } from 'inversify'
+import { injectable, postConstruct } from 'inversify'
 
 @injectable()
-export class MessagingService {}
+export class MessagingService {
+  @postConstruct()
+  async init() {}
+}

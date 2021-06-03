@@ -1,7 +1,6 @@
 import { IO } from 'botpress/sdk'
 import { ConfigProvider } from 'core/config/config-loader'
 import { EventEngine } from 'core/events'
-import { MessageService, ConversationService } from 'core/messaging'
 import { TYPES } from 'core/types'
 import { ChannelUserRepository } from 'core/users'
 import { InvalidParameterError } from 'errors'
@@ -30,9 +29,7 @@ export class ConverseService {
   constructor(
     @inject(TYPES.ConfigProvider) private configProvider: ConfigProvider,
     @inject(TYPES.EventEngine) private eventEngine: EventEngine,
-    @inject(TYPES.UserRepository) private userRepository: ChannelUserRepository,
-    @inject(TYPES.ConversationService) private conversationService: ConversationService,
-    @inject(TYPES.MessageService) private messageService: MessageService
+    @inject(TYPES.UserRepository) private userRepository: ChannelUserRepository
   ) {}
 
   @postConstruct()
@@ -96,17 +93,21 @@ export class ConverseService {
 
     await this.userRepository.getOrCreate('api', userId, botId)
 
-    const conversation = await this.conversationService.forBot(botId).recent(userId)
+    // TODO: reimpl this
+    // const conversation = await this.conversationService.forBot(botId).recent(userId)
 
     const userKey = buildUserKey(botId, userId)
     const timeoutPromise = this._createTimeoutPromise(botId, userKey)
     const donePromise = this._createDonePromise(botId, userKey)
 
+    // TODO: reimpl this
+    /*
     await this.messageService.forBot(botId).receive(conversation.id, payload, {
       channel: 'api',
       credentials,
       nlu: { includedContexts }
     })
+    */
 
     return Promise.race([timeoutPromise, donePromise]).finally(() => {
       converseApiEvents.removeAllListeners(`done.${userKey}`)
@@ -188,9 +189,12 @@ export class ConverseService {
     this._responseMap[userKey].responses!.push(event.payload)
 
     if (event.type !== 'typing' && event.type !== 'data') {
+      // TODO: reimpl this
+      /*
       void this.messageService
         .forBot(event.botId)
         .create(event.threadId!, event.payload, undefined, event.id, event.incomingEventId)
+      */
     }
   }
 

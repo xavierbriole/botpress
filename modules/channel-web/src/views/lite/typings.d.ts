@@ -149,7 +149,7 @@ export interface Config {
   botId?: string
   externalAuthToken?: string
   userId?: string
-  conversationId?: sdk.uuid
+  conversationId?: string
   /** Allows to set a different user id for different windows (eg: studio, specific bot, etc) */
   userIdScope?: string
   enableReset: boolean
@@ -239,6 +239,28 @@ export interface BotInfo {
   lazySocket: boolean
 }
 
+export interface Conversation {
+  id: string
+  clientId: string
+  userId: string
+  createdOn: Date
+}
+
+export interface BaseMessage {
+  id: string
+  conversationId: string
+  authorId: string | undefined
+  sentOn: Date
+  payload: any
+  // TODO: remove this
+  incomingEventId: string
+  eventId: string
+}
+
+export interface RecentConversation extends Conversation {
+  lastMessage?: Message
+}
+
 /** Represents the current conversation with all messages */
 export type CurrentConversation = {
   botId: string
@@ -247,12 +269,12 @@ export type CurrentConversation = {
   user_last_seen_on: Date | undefined
   /** Event ?  */
   typingUntil: any
-} & sdk.Conversation
+} & Conversation
 
 export type Message = {
   // The typing delay in ms
   timeInMs: number
-} & sdk.Message
+} & BaseMessage
 
 export interface QueuedMessage {
   message: Message

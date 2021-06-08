@@ -1,4 +1,5 @@
 import * as sdk from 'botpress/sdk'
+import { RecentConversation } from 'lite/typings'
 import { inject, observer } from 'mobx-react'
 import React from 'react'
 import { InjectedIntlProps, injectIntl } from 'react-intl'
@@ -27,7 +28,7 @@ const ConversationListItem = injectIntl(({ conversation, onClick, hasFocus, intl
 })
 
 type ConversationListItemProps = {
-  conversation: sdk.RecentConversation
+  conversation: RecentConversation
   hasFocus: boolean
   onClick: (event: React.MouseEvent) => void
 } & InjectedIntlProps &

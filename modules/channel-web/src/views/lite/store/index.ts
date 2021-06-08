@@ -17,6 +17,7 @@ import {
   Message,
   MessageWrapper,
   QueuedMessage,
+  RecentConversation,
   StudioConnector
 } from '../typings'
 import { downloadFile, trackMessage } from '../utils'
@@ -39,7 +40,7 @@ class RootStore {
   private api: WebchatApi
 
   @observable
-  public conversations: sdk.RecentConversation[] = []
+  public conversations: RecentConversation[] = []
 
   @observable
   public currentConversation: CurrentConversation
@@ -122,7 +123,7 @@ class RootStore {
   }
 
   @computed
-  get currentConversationId(): sdk.uuid | undefined {
+  get currentConversationId(): string | undefined {
     return this.currentConversation?.id
   }
 
@@ -245,7 +246,7 @@ class RootStore {
 
   /** Fetch the specified conversation ID, or try to fetch a valid one from the list */
   @action.bound
-  async fetchConversation(convoId?: sdk.uuid): Promise<sdk.uuid> {
+  async fetchConversation(convoId?: string): Promise<string> {
     const conversationId = convoId || this._getCurrentConvoId()
     if (!conversationId) {
       return this.createConversation()
@@ -298,7 +299,7 @@ class RootStore {
 
   /** Creates a new conversation and switches to it */
   @action.bound
-  async createConversation(): Promise<sdk.uuid> {
+  async createConversation(): Promise<string> {
     const newId = await this.api.createConversation()
     await this.fetchConversations()
     await this.fetchConversation(newId)
@@ -498,7 +499,7 @@ class RootStore {
   }
 
   /** Returns the current conversation ID, or the last one if it didn't expired. Otherwise, returns nothing. */
-  private _getCurrentConvoId(): sdk.uuid | undefined {
+  private _getCurrentConvoId(): string | undefined {
     if (this.currentConversationId) {
       return this.currentConversationId
     }

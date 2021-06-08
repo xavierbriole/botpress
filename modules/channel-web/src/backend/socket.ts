@@ -1,20 +1,12 @@
 import * as sdk from 'botpress/sdk'
-import { ChannelRenderer, ChannelSender } from 'common/channel'
 import _ from 'lodash'
-import { WebCommonRenderer } from '../renderers'
-import { WebCommonSender, WebTypingSender } from '../senders'
 
 import Database from './db'
-import { WebContext } from './typings'
+import { MessagingClient } from './messaging'
 
 export const CHANNEL_NAME = 'web'
 
-export default async (bp: typeof sdk, db: Database) => {
-  const config: any = {} // FIXME
-  const { botName = 'Bot', botAvatarUrl = undefined } = config || {} // FIXME
-  const renderers: ChannelRenderer<WebContext>[] = [new WebCommonRenderer()]
-  const senders: ChannelSender<WebContext>[] = [new WebTypingSender(), new WebCommonSender()]
-
+export default async (bp: typeof sdk, db: Database, messaging: MessagingClient) => {
   bp.events.registerMiddleware({
     description:
       'Sends out messages that targets platform = webchat.' +
@@ -30,32 +22,9 @@ export default async (bp: typeof sdk, db: Database) => {
       return next()
     }
 
-    const context: WebContext = {
-      bp,
-      event,
-      client: bp,
-      handlers: [],
-      payload: _.cloneDeep(event.payload),
-      botUrl: process.EXTERNAL_URL,
-      messages: [],
-      conversationId:
-        event.threadId || (await bp.experimental.conversations.forBot(event.botId).recent(event.target)).id,
-      db,
-      botName,
-      botAvatarUrl
-    }
-
-    for (const renderer of renderers) {
-      if (renderer.handles(context)) {
-        renderer.render(context)
-        context.handlers.push(renderer.id)
-      }
-    }
-
-    for (const sender of senders) {
-      if (sender.handles(context)) {
-        await sender.send(context)
-      }
+    if (event.type === 'data') {
+      const payload = bp.RealTimePayload.forVisitor(event.target, 'webchat.data', event.payload)
+      bp.realtime.sendPayload(payload)
     }
 
     next(undefined, false)

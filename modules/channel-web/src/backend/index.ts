@@ -3,13 +3,15 @@ import * as sdk from 'botpress/sdk'
 
 import api from './api'
 import WebchatDatabase from './db'
+import { MessagingClient } from './messaging'
 import socket from './socket'
 
 const onServerStarted = async (bp: typeof sdk) => {
   const db = new WebchatDatabase(bp)
+  const messaging = new MessagingClient()
 
-  await api(bp, db)
-  await socket(bp, db)
+  await api(bp, db, messaging)
+  await socket(bp, db, messaging)
 }
 
 const onModuleUnmount = async (bp: typeof sdk) => {

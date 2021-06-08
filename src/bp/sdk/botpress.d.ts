@@ -1478,55 +1478,6 @@ declare module 'botpress/sdk' {
     asChatUser?: boolean
   }
 
-  export type uuid = string
-
-  export interface ListOptions {
-    limit?: number
-    offset?: number
-  }
-
-  export interface Conversation {
-    id: uuid
-    userId: string
-    botId: string
-    createdOn: Date
-  }
-
-  export interface RecentConversation extends Conversation {
-    lastMessage?: Message
-  }
-
-  export interface ConversationDeleteFilters {
-    id?: uuid
-    userId?: string
-  }
-
-  export interface ConversationListFilters extends ListOptions {
-    userId: string
-  }
-
-  export interface Message {
-    id: uuid
-    conversationId: uuid
-    authorId: string | undefined
-    eventId?: string
-    incomingEventId?: string
-    sentOn: Date
-    payload: any
-  }
-
-  export interface MessageArgs
-    extends Partial<Omit<IO.EventCtorArgs, 'type' | 'direction' | 'payload' | 'target' | 'botId' | 'threadId'>> {}
-
-  export interface MessageDeleteFilters {
-    id?: uuid
-    conversationId?: uuid
-  }
-
-  export interface MessageListFilters extends ListOptions {
-    conversationId: uuid
-  }
-
   export interface RenderPipeline {
     text: typeof experimental.render.text
     image: typeof experimental.render.image

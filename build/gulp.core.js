@@ -10,6 +10,7 @@ const fs = require('fs')
 const mkdirp = require('mkdirp')
 const { exec, spawn } = require('child_process')
 const rimraf = require('gulp-rimraf')
+const { execute } = require('./exec')
 
 const maybeFetchPro = () => {
   const isProBuild = process.env.EDITION === 'pro' || fs.existsSync('pro')
@@ -87,17 +88,15 @@ const checkTranslations = cb => {
   })
 }
 
-const buildDownloader = cb => {
-  const child = exec('yarn && yarn build', { cwd: 'build/downloader' }, err => cb(err))
-  child.stdout.pipe(process.stdout)
-  child.stderr.pipe(process.stderr)
-}
+const postInstall = async () => {
+  await execute('yarn', undefined, { cwd: 'build/native-extensions' })
+  await execute('yarn', ['build'], { cwd: 'build/native-extensions' })
+  await execute('yarn', undefined, { cwd: 'build/downloader' })
+  await execute('yarn', ['build'], { cwd: 'build/downloader' })
+  await execute('yarn', ['start', 'init'], { cwd: 'build/downloader' })
 
-const initDownloader = cb => {
-  const proc = spawn('yarn', ['start', 'init'], { cwd: 'build/downloader', stdio: 'inherit', shell: true })
-  proc.on('exit', (code, signal) =>
-    cb(code !== 0 ? new Error(`Process exited with exit-code ${code} and signal ${signal}`) : undefined)
-  )
+  // Ensures the native extensions are in node_modules
+  await execute('yarn', ['--ignore-scripts'])
 }
 
 const build = () => {
@@ -118,6 +117,5 @@ module.exports = {
   build,
   watch,
   checkTranslations,
-  buildDownloader,
-  initDownloader
+  postInstall
 }

@@ -60,8 +60,4 @@ const createArchive = async () => {
   await zipArchive('bp-linux', 'linux')
 }
 
-const package = modules => {
-  return gulp.series([package.packageApp, ...(process.argv.includes('--skip-modules') ? [] : modules), createArchive])
-}
-
-module.exports = { packageApp }
+module.exports = { packageApp, createArchive }

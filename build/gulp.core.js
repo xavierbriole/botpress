@@ -88,15 +88,17 @@ const checkTranslations = cb => {
   })
 }
 
-const postInstall = async () => {
-  // await execute('yarn', undefined, { cwd: 'build/native-extensions' })
-  // await execute('yarn', ['build'], { cwd: 'build/native-extensions' })
-  await execute('yarn', undefined, { cwd: 'build/downloader' })
-  await execute('yarn', ['build'], { cwd: 'build/downloader' })
-  await execute('yarn', ['start', 'init'], { cwd: 'build/downloader' })
+const buildDownloader = cb => {
+  const child = exec('yarn && yarn build', { cwd: 'build/downloader' }, err => cb(err))
+  child.stdout.pipe(process.stdout)
+  child.stderr.pipe(process.stderr)
+}
 
-  // Ensures the native extensions are in node_modules
-  await execute('yarn', ['--ignore-scripts'])
+const initDownloader = cb => {
+  const proc = spawn('yarn', ['start', 'init'], { cwd: 'build/downloader', stdio: 'inherit', shell: true })
+  proc.on('exit', (code, signal) =>
+    cb(code !== 0 ? new Error(`Process exited with exit-code ${code} and signal ${signal}`) : undefined)
+  )
 }
 
 const build = () => {
@@ -117,5 +119,6 @@ module.exports = {
   build,
   watch,
   checkTranslations,
-  postInstall
+  buildDownloader,
+  initDownloader
 }

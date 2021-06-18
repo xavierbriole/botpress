@@ -89,8 +89,8 @@ const checkTranslations = cb => {
 }
 
 const postInstall = async () => {
-  await execute('yarn', undefined, { cwd: 'build/native-extensions' })
-  await execute('yarn', ['build'], { cwd: 'build/native-extensions' })
+  // await execute('yarn', undefined, { cwd: 'build/native-extensions' })
+  // await execute('yarn', ['build'], { cwd: 'build/native-extensions' })
   await execute('yarn', undefined, { cwd: 'build/downloader' })
   await execute('yarn', ['build'], { cwd: 'build/downloader' })
   await execute('yarn', ['start', 'init'], { cwd: 'build/downloader' })
